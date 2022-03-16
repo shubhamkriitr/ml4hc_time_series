@@ -85,6 +85,7 @@ class ResidualBlock(nn.Module):
                 current_block.append(relu_layer)
         
         self.blocks = nn.ModuleList(layer_blocks)
+        self.relu_op = nn.ReLU()
 
 
     
@@ -103,7 +104,7 @@ class ResidualBlock(nn.Module):
             # Shortcut connection
             out_ = out_ + output_of_last_block
 
-            out_ = F.relu(out_) # adding relu here as all the block ends
+            out_ = self.relu_op(out_) # adding relu here as all the block ends
                                 # in batchnorm
             output_of_last_block = out_
 
@@ -170,6 +171,6 @@ if __name__ == "__main__":
     shortcut_connection_flags = [0, 1]*2
 
     res_block = ResidualBlock(1, output_channels, kernel_sizes, strides,
-                     paddings, shortcut_connection_flags, None)
+                     paddings, shortcut_connection_flags, True)
 
     print(res_block)

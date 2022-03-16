@@ -150,15 +150,19 @@ class CnnWithResidualBlocks(nn.Module):
                 "kernel_sizes": [3, 3, 3],
 
                 # this is the number of conv blocks used in each of the 
-                # residual blocks
-                "num_conv_layers_in_blocks": [2, 2, 2],
+                # residual blocks. (It must be an even number)
+                "num_conv_layers_in_blocks": [4, 4, 4],
 
                 # it is a list of number of output channels for each of the
                 # residual block (in order)
                 "num_filters": [32, 64, 128],
 
 
-            }
+            },
+
+            "fully_connected_layer_input_size": 128,
+
+            "num_classes": 5
         }
 
         # if config is provided then use that otherwise default one
@@ -170,8 +174,20 @@ class CnnWithResidualBlocks(nn.Module):
 
     def forward(self, x) :
         out_ = self.intial_transformation(x)
+
+        # apply residual blocks
         for block in self.residual_blocks:
             out_ = block(out_)
+
+        # apply avegrage pooling
+        out_ = self.average_pooling(out_)
+
+        # flatten and feed to Fully connected layer
+        out_ = self.flatten(out_)
+        out_ = self.fc(out_)
+
+        # do softmax
+        out_ = self.softmax(out_)
         
         return out_
 
@@ -214,6 +230,11 @@ class CnnWithResidualBlocks(nn.Module):
             kernel_sizes = [k]*num_conv_blocks
             paddings = [0] + [int(k/2)]*(num_conv_blocks - 1)
 
+            #we want shortcut connection after every second block
+            shortcut_connection_flags = [1 if (idx+1)%2==0 else 0 for idx in 
+                                            range(num_conv_blocks)]
+            
+
 
             residual_block = ResidualBlock(
                 input_channels[idx], output_channels, kernel_sizes, strides,
@@ -246,8 +267,15 @@ class CnnWithResidualBlocks(nn.Module):
             padding=ft_padding
         )
 
-        self.residual_blocks = self.get_residual_block(self.config,
+        self.residual_blocks = self.get_residual_blocks(self.config,
                                         num_input_channels=ft_output_channels)
+
+        self.average_pooling = nn.AdaptiveAvgPool1d(1)
+
+        self.fc = nn.Linear(self.config["fully_connected_layer_input_size"],
+                                self.config["num_classes"])
+        self.flatten = nn.Flatten()
+        self.softmax = nn.Softmax()
 
 
 

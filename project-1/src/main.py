@@ -20,7 +20,7 @@ x = torch.transpose(x, 1, 2) # channel first
 
 y = res_block(x)
 
-resnet = CnnWithResidualBlocks()
+resnet = CnnWithResidualBlocks(config=None)
 y2 = resnet(x)
 
 writer.add_graph(res_block, x)

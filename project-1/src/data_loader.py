@@ -4,6 +4,13 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from pathlib import Path
 
+
+DATASET_LOC_MITBIH_TRAIN = "../resources/input/mitbih_train.csv"
+DATASET_LOC_MITBIH_TEST = "../resources/input/mitbih_test.csv"
+DATASET_LOC_PTBDB_NORMAL = "../resources/input/ptbdb_normal.csv"
+DATASET_LOC_PTBDB_ABNORMAL = "../resources/input/ptbdb_abnormal.csv"
+
+
 class MITBIHDataLoader:
     def __init__(self):
         pass
@@ -17,9 +24,9 @@ class MITBIHDataLoader:
         X_test: np array (21892, 187, 1)
         Y_test: np_array (21892,)
         """
-        df_train = pd.read_csv(str(Path("../../resources/input/mitbih_train.csv")), header=None)
+        df_train = pd.read_csv(str(Path(DATASET_LOC_MITBIH_TRAIN)), header=None)
         df_train = df_train.sample(frac=1)
-        df_test = pd.read_csv(str(Path("../../resources/input/mitbih_test.csv")), header=None)
+        df_test = pd.read_csv(str(Path(DATASET_LOC_MITBIH_TEST)), header=None)
 
         Y = np.array(df_train[187].values).astype(np.int8)
         X = np.array(df_train[list(range(187))].values)[..., np.newaxis]
@@ -41,8 +48,8 @@ class PTBDataLoader:
         X_test: np array (2911, 187, 1)
         Y_test: np_array (2911,)
         """
-        df_1 = pd.read_csv(str(Path("../../resources/input/ptbdb_normal.csv")), header=None)
-        df_2 = pd.read_csv(str(Path("../../resources/input/ptbdb_abnormal.csv")), header=None)
+        df_1 = pd.read_csv(str(Path(DATASET_LOC_PTBDB_NORMAL)), header=None)
+        df_2 = pd.read_csv(str(Path(DATASET_LOC_PTBDB_ABNORMAL)), header=None)
         df = pd.concat([df_1, df_2])
 
         df_train, df_test = train_test_split(df, test_size=0.2, random_state=1337, stratify=df[187])

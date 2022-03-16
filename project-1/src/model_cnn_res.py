@@ -2,12 +2,18 @@ from torch import nn
 from torch import functional as F
 import numpy as np
 from data_loader import MITBIHDataLoader, PTBDataLoader
+import torch
+from torch.optim.optimizer import Optimizer
+from torch.optim.adam import Adam
+
 import copy
+import logging
+
+logger = logging.getLogger(name=__name__)
 
 MODEL_CNN_RES = "CNN with Residual Blocks"
 
-DATA_MITBIH = "Dataset 1"
-DATA_PTBDB = "Dataset 2"
+
 
 
 class ResidualBlock(nn.Module):
@@ -283,33 +289,78 @@ class CnnWithResidualBlocks(nn.Module):
 
 class BaseTrainer(object):
 
-    def __init__(self, config) -> None:
+    def __init__(self, config, model: nn.Module, dataloader, cost_function,
+                 optimizer: Optimizer,
+                batch_callbacks, epoch_callbacks) -> None:
         self.config = config
-        self.dataloader = None
+        self.model = model
+        self.cost_function = cost_function
+        self.dataloader = dataloader
+        self.batch_callbacks = batch_callbacks
+        self.epoch_callbacks = epoch_callbacks
+
+        # read from config: TODO
+        self.max_epoch = 2
+        self.batch_size = 100
+        self.lr = 1e-3
+        self.optimizer = optimizer
+
 
     def train(self):
-        pass
+        global_batch_number = 0
+        current_epoch_batch_number = 0
+        current_epoch = 0
 
-    def prepare_data_loaders(self):
-        if self.config["data"] == DATA_MITBIH:
-            dataloader = MITBIHDataLoader()
-        elif self.config["data"] == DATA_PTBDB:
-            dataloader = PTBDataLoader()
+        for epoch in range(1, self.max_epoch + 1):
+            current_epoch += 1
+            current_epoch_batch_number = 0
+            for batch_data in self.dataloader:
+                global_batch_number += 1
+                current_epoch_batch_number += 1
 
-        self.dataloader = dataloader
+                # perform one training step
+                self.training_step(batch_data, global_batch_number,
+                                    current_epoch, current_epoch_batch_number)
+            self.invoke_epoch_callbacks(self.model, global_batch_number,
+                                current_epoch, current_epoch_batch_number)
+            
+    def training_step(self, batch_data,  global_batch_number, current_epoch,
+                    current_epoch_batch_number):
         
-    def load_data(self):
-        if self.dataloader is None:
-            self.prepare_data_loaders()
+        self.invoke_callbacks(self.batch_callbacks, 
+                    [self.model, batch_data, global_batch_number,
+                    current_epoch, current_epoch_batch_number], {})
+
+    def invoke_epoch_callbacks(self, model, global_batch_number,
+                                current_epoch, current_epoch_batch_number):
+        self.invoke_callbacks(self.epoch_callbacks, 
+                    [self.model, None, global_batch_number,
+                    current_epoch, current_epoch_batch_number], {})
+
+    def invoke_callbacks(self, callbacks, args: list, kwargs: dict):
+        for callback in callbacks:
+            try:
+                callback(*args, **kwargs)
+            except Exception as exc:
+                logger.error(exc)
+    
+
+
         
-        x_train, y_train, x_test, y_test = self.dataloader.load_data()
 
-        return x_train, y_train, x_test, y_test
-
+        
 
 
 if __name__ == "__main__":
-    trainer = BaseTrainer({"model": MODEL_CNN_RES, "data": DATA_MITBIH})
+    trainer = BaseTrainer({
+            "model": MODEL_CNN_RES,
+            "data": DATA_MITBIH,
+            "load_from_checkpoint": False,
+            "saved_model_path": "",
+            "epoch": 2,
+            "batch_size": 200,
+            "lr": 0.0001
+            })
 
     trainer.load_data()
     trainer.train()

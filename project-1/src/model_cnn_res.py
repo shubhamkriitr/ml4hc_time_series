@@ -9,7 +9,7 @@ DATA_MITBIH = "Dataset 1"
 DATA_PTBDB = "Dataset 2"
 
 
-class ResidualBlockSmall(nn.Module):
+class ResidualBlock(nn.Module):
     def __init__(self, num_input_channels, layerwise_num_ouput_channels,
                 kernel_sizes, strides, paddings, shortcut_connection_flags,
                 identity_projection = None ) -> None:
@@ -25,13 +25,25 @@ class ResidualBlockSmall(nn.Module):
                                      indicates a shortcut connection at the
                                      layer at that particular index should
                                      be added (Note: last entry must be 1)
-        `identity_projection` : it is the layer to project the input to 
+        `identity_projection` : "it is the layer to project the input to 
                                 desired shape if needed (when the shape of 
-                                input does not match with the output)
+                                input does not match with the output)" or 
+                                a boolean value to indicate such a layer 
+                                should be used.
         """
         super().__init__()
         assert shortcut_connection_flags[-1] == 1
-        self.identity_projection = identity_projection
+        if isinstance(identity_projection, bool):
+            if identity_projection:
+                self.identity_projection = \
+                    self._create_identity_projection_block(
+                        in_channels=num_input_channels,
+                        out_channels=layerwise_num_ouput_channels[0],
+                        kernel_size=kernel_sizes[0],
+                        stride=strides[0]
+                    )
+        else:
+            self.identity_projection = identity_projection
         self.shortcut_connection_flags = shortcut_connection_flags
 
         # num of sets of conv-batchnorm-relu blocks to use
@@ -97,6 +109,17 @@ class ResidualBlockSmall(nn.Module):
 
         return out_
 
+    def _create_identity_projection_block(self, in_channels, out_channels,
+            kernel_size, stride):
+        # creates a block with conv layer + batchnorm layer 
+        block = nn.Sequential(nn.Conv1d(in_channels=in_channels,
+         out_channels=out_channels, kernel_size=kernel_size, stride=stride),
+                                 nn.BatchNorm1d(out_channels))
+        return block
+        
+
+
+
 
 class CnnWithResidualBlocks(nn.Module):
     def __init__(self) -> None:
@@ -139,3 +162,14 @@ if __name__ == "__main__":
 
     trainer.load_data()
     trainer.train()
+
+    output_channels = [16, 16, 16, 16]
+    kernel_sizes = [3 for i in range(len(output_channels))]
+    paddings = [1 for i in range(len(output_channels))]
+    strides = [2, 1, 1, 1]
+    shortcut_connection_flags = [0, 1]*2
+
+    res_block = ResidualBlock(1, output_channels, kernel_sizes, strides,
+                     paddings, shortcut_connection_flags, None)
+
+    print(res_block)

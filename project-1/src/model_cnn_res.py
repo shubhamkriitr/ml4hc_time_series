@@ -2,6 +2,7 @@ from torch import nn
 from torch import functional as F
 import numpy as np
 from data_loader import MITBIHDataLoader, PTBDataLoader
+import copy
 
 MODEL_CNN_RES = "CNN with Residual Blocks"
 
@@ -123,12 +124,133 @@ class ResidualBlock(nn.Module):
 
 
 class CnnWithResidualBlocks(nn.Module):
-    def __init__(self) -> None:
+    def __init__(self, config) -> None:
         super().__init__()
-    
 
-    def forward(self, *input, **kwargs) :
-        return super().forward(*input, **kwargs)
+        self.default_config = {
+            "num_input_channels": 1,
+
+            
+            "first_transformation": {
+                # this is the number of channels of the output of the 
+                # first conv and batchnrom operation. This output is 
+                # further fed to the residual blocks,
+                "num_output_channels": 16,
+                "kernel_size": 5,
+                "padding": 2,
+                "stride": 1
+            },
+
+
+            # this config is to control the general attributes of 
+            # the residual block
+            "residual_block_config": {
+                # the stride to use when downsampling a map
+                "downsampling_strides": [2, 2, 2],
+                "kernel_sizes": [3, 3, 3],
+
+                # this is the number of conv blocks used in each of the 
+                # residual blocks
+                "num_conv_layers_in_blocks": [2, 2, 2],
+
+                # it is a list of number of output channels for each of the
+                # residual block (in order)
+                "num_filters": [32, 64, 128],
+
+
+            }
+        }
+
+        # if config is provided then use that otherwise default one
+        self.config = self.default_config
+        if config is not None:
+            self.config = config
+
+        self._build_model()
+
+    def forward(self, x) :
+        out_ = self.intial_transformation(x)
+        for block in self.residual_blocks:
+            out_ = block(out_)
+        
+        return out_
+
+    def get_conv_bn_relu_block(self, in_channels, out_channels,
+            kernel_size, stride, padding):
+        block = nn.Sequential(nn.Conv1d(in_channels=in_channels,
+         out_channels=out_channels, kernel_size=kernel_size, stride=stride,
+         padding=padding),
+                                 nn.BatchNorm1d(out_channels),
+                                 nn.ReLU())
+        return block
+    
+    def get_residual_blocks(self, config, num_input_channels):
+        # Creates a module list of residual blocks
+        # based on the configuration provided
+
+        # parameters for residual blocks
+        rb_config = config["residual_block_config"]
+        rb_downsampling_stride = rb_config["downsampling_strides"]
+        rb_num_conv_layers_per_block = rb_config["num_conv_layers_in_blocks"]
+        rb_num_filters = rb_config["num_filters"]
+        rb_kernel_sizes = rb_config["kernel_sizes"]
+
+
+        num_residual_blocks = len(rb_num_filters)
+
+        # list of input channel for each of the sub blocks
+        input_channels = [num_input_channels] + rb_num_filters[0:-1]
+
+        all_residual_blocks = []
+
+        for idx in range(num_residual_blocks):
+            k = rb_kernel_sizes[idx]
+            num_conv_blocks = rb_num_conv_layers_per_block[idx]
+            downsampling_stride = rb_downsampling_stride[idx]
+            num_out_channels = rb_num_filters[idx]
+
+            output_channels = [num_out_channels]*num_conv_blocks
+            strides = [downsampling_stride]+[1]*(num_conv_blocks - 1)
+            kernel_sizes = [k]*num_conv_blocks
+            paddings = [0] + [int(k/2)]*(num_conv_blocks - 1)
+
+
+            residual_block = ResidualBlock(
+                input_channels[idx], output_channels, kernel_sizes, strides,
+                paddings, shortcut_connection_flags, True)
+            
+
+            all_residual_blocks.append(residual_block)
+
+        return nn.ModuleList(all_residual_blocks)
+    
+    def _build_model(self):
+        config = self.config
+        num_input_channels = config["num_input_channels"]
+
+        # parameters for the first transformation
+        ft_config = config["first_transformation"]
+        ft_kernel_size = ft_config["kernel_size"]
+        ft_padding = ft_config["padding"]
+        ft_output_channels = ft_config["num_output_channels"]
+        ft_stride = ft_config["stride"]
+
+        
+        # first few layers which process the input before feeding it
+        # to the residual block
+        self.intial_transformation = self.get_conv_bn_relu_block(
+            in_channels=num_input_channels,
+            out_channels=ft_output_channels,
+            kernel_size=ft_kernel_size,
+            stride=ft_stride,
+            padding=ft_padding
+        )
+
+        self.residual_blocks = self.get_residual_block(self.config,
+                                        num_input_channels=ft_output_channels)
+
+
+
     
 
 class BaseTrainer(object):

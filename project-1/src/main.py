@@ -1,7 +1,7 @@
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
-from model_cnn_res import ResidualBlock
+from model_cnn_res import ResidualBlock, CnnWithResidualBlocks
 import numpy as np
 
 writer = SummaryWriter()
@@ -20,5 +20,9 @@ x = torch.transpose(x, 1, 2) # channel first
 
 y = res_block(x)
 
+resnet = CnnWithResidualBlocks()
+y2 = resnet(x)
+
 writer.add_graph(res_block, x)
+writer.add_graph(resnet, x)
 writer.close()

@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from pathlib import Path
 from torch.utils.data import DataLoader, Dataset
-
+import torch
 
 DATASET_LOC_MITBIH_TRAIN = "../resources/input/mitbih_train.csv"
 DATASET_LOC_MITBIH_TEST = "../resources/input/mitbih_test.csv"
@@ -26,7 +26,8 @@ class ClassificationDataset(Dataset):
 
 class DataLoaderUtil:
     def __init__(self) -> None:
-        self.config
+        pass
+
     def prepare_data_loader(self, dataset_name):
         if dataset_name == DATA_MITBIH:
             dataloader = MITBIHDataLoader()
@@ -38,6 +39,17 @@ class DataLoaderUtil:
     def load_data(self, dataset_name):
         dataloader = self.prepare_data_loader(dataset_name)
         x_train, y_train, x_test, y_test = dataloader.load_data()
+
+        # get torch tensors
+        x_train, y_train, x_test, y_test \
+            = [torch.tensor(data=data_item, dtype=torch.float32) for 
+               data_item in [x_train, y_train, x_test, y_test]]
+
+        # Pytorch expects channel first dimension ordering
+        # therefore transposing to bring channel first
+        x_train = torch.transpose(x_train, 1, 2)
+        x_test = torch.transpose(x_test, 1, 2)
+
         return x_train, y_train, x_test, y_test
     
     def get_datasets_split(self, dataset_name, val_split=0.1):
@@ -116,3 +128,10 @@ class PTBDataLoader:
         X_test = np.array(df_test[list(range(187))].values)[..., np.newaxis]
         return X, Y, X_test, Y_test
 
+if __name__ == "__main__":
+    dataloader_util = DataLoaderUtil()
+    train_loader, val_loader, test_loader \
+        = dataloader_util.get_data_loaders(DATA_PTBDB)
+    for batch_data in train_loader:
+        x, y = batch_data
+        z = x

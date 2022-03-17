@@ -1,7 +1,8 @@
 from torch import nn
 from torch import functional as F
 import numpy as np
-from data_loader import MITBIHDataLoader, PTBDataLoader
+from data_loader import (MITBIHDataLoader, PTBDataLoader, DataLoaderUtil,
+                            DATA_MITBIH, DATA_PTBDB)
 import torch
 from torch.optim.optimizer import Optimizer
 from torch.optim.adam import Adam
@@ -289,10 +290,9 @@ class CnnWithResidualBlocks(nn.Module):
 
 class BaseTrainer(object):
 
-    def __init__(self, config, model: nn.Module, dataloader, cost_function,
+    def __init__(self, model: nn.Module, dataloader, cost_function,
                  optimizer: Optimizer,
-                batch_callbacks, epoch_callbacks) -> None:
-        self.config = config
+                batch_callbacks=[], epoch_callbacks=[]) -> None:
         self.model = model
         self.cost_function = cost_function
         self.dataloader = dataloader
@@ -309,10 +309,7 @@ class BaseTrainer(object):
     def train(self):
         global_batch_number = 0
         current_epoch_batch_number = 0
-        current_epoch = 0
-
-        for epoch in range(1, self.max_epoch + 1):
-            current_epoch += 1
+        for current_epoch in range(1, self.max_epoch + 1):
             current_epoch_batch_number = 0
             for batch_data in self.dataloader:
                 global_batch_number += 1
@@ -327,9 +324,9 @@ class BaseTrainer(object):
     def training_step(self, batch_data,  global_batch_number, current_epoch,
                     current_epoch_batch_number):
         
-        self.invoke_callbacks(self.batch_callbacks, 
-                    [self.model, batch_data, global_batch_number,
-                    current_epoch, current_epoch_batch_number], {})
+        # make one training step
+        
+        raise NotImplementedError()
 
     def invoke_epoch_callbacks(self, model, global_batch_number,
                                 current_epoch, current_epoch_batch_number):
@@ -343,28 +340,67 @@ class BaseTrainer(object):
                 callback(*args, **kwargs)
             except Exception as exc:
                 logger.error(exc)
+
+class CnnTrainer(BaseTrainer):
+
+    def training_step(self, batch_data, global_batch_number,
+                        current_epoch, current_epoch_batch_number):
+        # make sure training mode is on 
+        self.model.train()
+
+        # reset optimizer
+        self.optimizer.zero_grad()
+
+        # unpack batch data
+        x, y_true = batch_data
+
+        # compute model prediction
+        y_pred = self.model(x)
+
+        # compute loss
+        loss = self.cost_function(y_true, y_pred)
+
+        # backward pass
+        loss.backward()
+
+        # take optimizer step
+        self.optimizer.step()
+
+        self.invoke_callbacks(self.batch_callbacks, 
+                    [self.model, batch_data, global_batch_number,
+                    current_epoch, current_epoch_batch_number], {"loss": loss})
+
+
+
+        
+
+def do_sample_training():
+    cost_function = nn.CrossEntropyLoss()
+    dataloader_util = DataLoaderUtil()
+    train_loader, val_loader, test_loader \
+        = dataloader_util.get_data_loaders(DATA_MITBIH)
+    model = CnnWithResidualBlocks(config=None) # using default model config
+    opti = Adam(lr=1e-4, params=model.parameters())
+
+    def batch_callback(model, batch_data, global_batch_number,
+                    current_epoch, current_epoch_batch_number, **kwargs):
+        print(
+            f"[{current_epoch}/{current_epoch_batch_number}]"
+            f" Loss: {kwargs['loss']}")
+
+    trainer = CnnTrainer(model=model, dataloader=train_loader,
+                cost_function=cost_function, optimizer=opti,
+                 batch_callbacks=[batch_callback])
+    
     
 
+    trainer.train()
 
-        
 
-        
+
 
 
 if __name__ == "__main__":
-    trainer = BaseTrainer({
-            "model": MODEL_CNN_RES,
-            "data": DATA_MITBIH,
-            "load_from_checkpoint": False,
-            "saved_model_path": "",
-            "epoch": 2,
-            "batch_size": 200,
-            "lr": 0.0001
-            })
-
-    trainer.load_data()
-    trainer.train()
-
     output_channels = [16, 16, 16, 16]
     kernel_sizes = [3 for i in range(len(output_channels))]
     paddings = [1 for i in range(len(output_channels))]
@@ -375,3 +411,5 @@ if __name__ == "__main__":
                      paddings, shortcut_connection_flags, True)
 
     print(res_block)
+
+    do_sample_training()

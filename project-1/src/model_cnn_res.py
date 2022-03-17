@@ -2,13 +2,15 @@ from torch import nn
 from torch import functional as F
 import numpy as np
 from data_loader import (MITBIHDataLoader, PTBDataLoader, DataLoaderUtil,
-                            DATA_MITBIH, DATA_PTBDB)
+                            DATA_MITBIH, DATA_PTBDB, DataLoaderUtilMini)
 import torch
 from torch.optim.optimizer import Optimizer
 from torch.optim.adam import Adam
 
 import copy
 import logging
+from sklearn.metrics import accuracy_score, f1_score
+from util import get_timestamp_str
 
 logger = logging.getLogger(name=__name__)
 
@@ -145,7 +147,9 @@ class CnnWithResidualBlocks(nn.Module):
                 "num_output_channels": 16,
                 "kernel_size": 5,
                 "padding": 2,
-                "stride": 1
+                "stride": 1,
+                # number of conv - bn - relu layers in this first block
+                "num_conv_layers": 3
             },
 
 
@@ -192,6 +196,7 @@ class CnnWithResidualBlocks(nn.Module):
         # flatten and feed to Fully connected layer
         out_ = self.flatten(out_)
         out_ = self.fc(out_)
+        out_ = self.relu_op(out_)
 
         # do softmax
         out_ = self.softmax(out_)
@@ -266,14 +271,22 @@ class CnnWithResidualBlocks(nn.Module):
         
         # first few layers which process the input before feeding it
         # to the residual block
-        self.intial_transformation = self.get_conv_bn_relu_block(
-            in_channels=num_input_channels,
-            out_channels=ft_output_channels,
-            kernel_size=ft_kernel_size,
-            stride=ft_stride,
-            padding=ft_padding
-        )
+        initial_transformation_layers = []
+        current_input_channel = num_input_channels
+        for idx in range(ft_config["num_conv_layers"]):
+            initial_transformation_layers.append(
+                self.get_conv_bn_relu_block(
+                    in_channels=current_input_channel,
+                    out_channels=ft_output_channels,
+                    kernel_size=ft_kernel_size,
+                    stride=ft_stride,
+                    padding=ft_padding
+                )
+            )
+            current_input_channel = ft_output_channels
 
+        self.intial_transformation = nn.Sequential(
+                                            *initial_transformation_layers)
         self.residual_blocks = self.get_residual_blocks(self.config,
                                         num_input_channels=ft_output_channels)
 
@@ -282,7 +295,8 @@ class CnnWithResidualBlocks(nn.Module):
         self.fc = nn.Linear(self.config["fully_connected_layer_input_size"],
                                 self.config["num_classes"])
         self.flatten = nn.Flatten()
-        self.softmax = nn.Softmax()
+        self.softmax = nn.Softmax(dim=1)
+        self.relu_op = nn.ReLU()
 
 
 
@@ -300,8 +314,8 @@ class BaseTrainer(object):
         self.epoch_callbacks = epoch_callbacks
 
         # read from config: TODO
-        self.max_epoch = 2
-        self.batch_size = 100
+        self.max_epoch = 20
+        # self.batch_size = 16
         self.lr = 1e-3
         self.optimizer = optimizer
 
@@ -358,7 +372,7 @@ class CnnTrainer(BaseTrainer):
         y_pred = self.model(x)
 
         # compute loss
-        loss = self.cost_function(y_true, y_pred)
+        loss = self.cost_function(input=y_pred, target=y_true)
 
         # backward pass
         loss.backward()
@@ -378,19 +392,48 @@ def do_sample_training():
     cost_function = nn.CrossEntropyLoss()
     dataloader_util = DataLoaderUtil()
     train_loader, val_loader, test_loader \
-        = dataloader_util.get_data_loaders(DATA_MITBIH)
+        = dataloader_util.get_data_loaders(DATA_MITBIH, train_batch_size=1000, 
+        val_batch_size=1, test_batch_size=100, train_shuffle=True,
+        val_split=0.1)
     model = CnnWithResidualBlocks(config=None) # using default model config
-    opti = Adam(lr=1e-4, params=model.parameters())
+    opti = Adam(lr=1e-3, params=model.parameters())
 
     def batch_callback(model, batch_data, global_batch_number,
                     current_epoch, current_epoch_batch_number, **kwargs):
         print(
             f"[{current_epoch}/{current_epoch_batch_number}]"
             f" Loss: {kwargs['loss']}")
+    
+    def save_model_callback(model: nn.Module, batch_data, global_batch_number,
+                    current_epoch, current_epoch_batch_number, **kwargs):
+        file_path = get_timestamp_str()\
+            + f"epoch_{current_epoch}_gbatch_{global_batch_number}.ckpt"
+        torch.save(model.state_dict(), file_path)
+        
+        model.eval()
+
+        num_batches = 0
+        acc_sum = 0
+
+        for x, y_true in train_loader:
+            y_pred_prob = model(x)
+            y_pred = torch.argmax(y_pred_prob, axis=1)
+            f1 = f1_score(y_true, y_pred, average="macro")
+
+            print("Test f1 score : %s "% f1)
+
+            acc = accuracy_score(y_true, y_pred)
+
+            print("Test accuracy score : %s "% acc)
+            num_batches += 1
+            acc_sum += acc
+        print(f"Average Accuracy :  {acc_sum/num_batches}")
+        
 
     trainer = CnnTrainer(model=model, dataloader=train_loader,
                 cost_function=cost_function, optimizer=opti,
-                 batch_callbacks=[batch_callback])
+                 batch_callbacks=[batch_callback], 
+                 epoch_callbacks=[save_model_callback])
     
     
 

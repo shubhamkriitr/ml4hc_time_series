@@ -41,9 +41,10 @@ class DataLoaderUtil:
         x_train, y_train, x_test, y_test = dataloader.load_data()
 
         # get torch tensors
-        x_train, y_train, x_test, y_test \
-            = [torch.tensor(data=data_item, dtype=torch.float32) for 
-               data_item in [x_train, y_train, x_test, y_test]]
+        x_train, x_test = [torch.tensor(data=data_item, dtype=torch.float32) 
+                            for data_item in [x_train, x_test]]
+        y_train, y_test = [torch.tensor(data=data_item, dtype=torch.long) for 
+               data_item in [y_train, y_test]]
 
         # Pytorch expects channel first dimension ordering
         # therefore transposing to bring channel first
@@ -76,6 +77,12 @@ class DataLoaderUtil:
         
         return train_loader, val_loader, test_loader
 
+class DataLoaderUtilMini(DataLoaderUtil):
+    def load_data(self, dataset_name):
+        x_train, y_train, x_test, y_test =  super().load_data(dataset_name)
+        x_train, y_train, x_test, y_test = [data_item[0:100] for data_item in
+            [x_train, y_train, x_test, y_test]]
+        return x_train, y_train, x_test, y_test
         
 class MITBIHDataLoader:
     def __init__(self):

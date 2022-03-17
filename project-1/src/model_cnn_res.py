@@ -80,9 +80,11 @@ class ResidualBlock(nn.Module):
             )
 
             batchnorm_layer = nn.BatchNorm1d(num_features=out_channels)
+            dropout_layer = nn.Dropout(p=0.2)
 
             current_block.append(conv_layer)
             current_block.append(batchnorm_layer)
+            current_block.append(dropout_layer)
 
             if shortcut_connection_flags[idx] == 1:
                 sequential_group = nn.Sequential(*current_block)
@@ -145,11 +147,11 @@ class CnnWithResidualBlocks(nn.Module):
                 # first conv and batchnrom operation. This output is 
                 # further fed to the residual blocks,
                 "num_output_channels": 16,
-                "kernel_size": 5,
+                "kernel_size": 3,
                 "padding": 2,
                 "stride": 1,
                 # number of conv - bn - relu layers in this first block
-                "num_conv_layers": 3
+                "num_conv_layers": 2
             },
 
 
@@ -162,7 +164,7 @@ class CnnWithResidualBlocks(nn.Module):
 
                 # this is the number of conv blocks used in each of the 
                 # residual blocks. (It must be an even number)
-                "num_conv_layers_in_blocks": [4, 4, 4],
+                "num_conv_layers_in_blocks": [2, 2, 2],
 
                 # it is a list of number of output channels for each of the
                 # residual block (in order)
@@ -314,7 +316,7 @@ class BaseTrainer(object):
         self.epoch_callbacks = epoch_callbacks
 
         # read from config: TODO
-        self.max_epoch = 20
+        self.max_epoch = 100
         # self.batch_size = 16
         self.lr = 1e-3
         self.optimizer = optimizer
@@ -385,18 +387,25 @@ class CnnTrainer(BaseTrainer):
                     current_epoch, current_epoch_batch_number], {"loss": loss})
 
 
-
+class CnnWithResidualBlocksPTB(CnnWithResidualBlocks):
+    def __init__(self, config) -> None:
+        super().__init__(config)
+        self.config["num_classes"] = 2
         
 
 def do_sample_training():
     cost_function = nn.CrossEntropyLoss()
     dataloader_util = DataLoaderUtil()
+
+    dataset_name = DATA_PTBDB # or DATA_MITBIH
+    model_class = CnnWithResidualBlocksPTB # or CnnWithResidualBlocks
+
     train_loader, val_loader, test_loader \
-        = dataloader_util.get_data_loaders(DATA_MITBIH, train_batch_size=1000, 
+        = dataloader_util.get_data_loaders(dataset_name, train_batch_size=100, 
         val_batch_size=1, test_batch_size=100, train_shuffle=True,
         val_split=0.1)
-    model = CnnWithResidualBlocks(config=None) # using default model config
-    opti = Adam(lr=1e-3, params=model.parameters())
+    model = model_class(config=None) # using default model config
+    opti = Adam(lr=1e-3, params=model.parameters(), weight_decay=1e-4)
 
     def batch_callback(model, batch_data, global_batch_number,
                     current_epoch, current_epoch_batch_number, **kwargs):
@@ -415,19 +424,26 @@ def do_sample_training():
         num_batches = 0
         acc_sum = 0
 
-        for x, y_true in train_loader:
-            y_pred_prob = model(x)
-            y_pred = torch.argmax(y_pred_prob, axis=1)
-            f1 = f1_score(y_true, y_pred, average="macro")
+        n_mc_samples = 4
+        with torch.no_grad():
+            for i in [1]: #x, y_true in train_loader:
+                x = test_loader.dataset.x
+                y_true = test_loader.dataset.y
 
-            print("Test f1 score : %s "% f1)
+                y_pred_prob = model(x)/n_mc_samples
+                for nmc in range(n_mc_samples -1):
+                    y_pred_prob = y_pred_prob + model(x)/n_mc_samples
+                y_pred = torch.argmax(y_pred_prob, axis=1)
+                f1 = f1_score(y_true, y_pred, average="macro")
 
-            acc = accuracy_score(y_true, y_pred)
+                print("Test f1 score : %s "% f1)
 
-            print("Test accuracy score : %s "% acc)
-            num_batches += 1
-            acc_sum += acc
-        print(f"Average Accuracy :  {acc_sum/num_batches}")
+                acc = accuracy_score(y_true, y_pred)
+
+                print("Test accuracy score : %s "% acc)
+                num_batches += 1
+                acc_sum += acc
+        # print(f"Average Accuracy :  {acc_sum/num_batches}")
         
 
     trainer = CnnTrainer(model=model, dataloader=train_loader,

@@ -546,13 +546,13 @@ class CnnWithResidualBlocksPTB(CnnWithResidualBlocks):
 
 def do_sample_training():
     cost_function = nn.CrossEntropyLoss() #
-    dataloader_util = DataLoaderUtilMini()
+    dataloader_util = DataLoaderUtil()
 
     dataset_name = DATA_PTBDB # or DATA_MITBIH
     model_class = SimpleCnnWithResidualConnection #CnnWithResidualBlocksPTB # or CnnWithResidualBlocks
 
     train_loader, val_loader, test_loader \
-        = dataloader_util.get_data_loaders(dataset_name, train_batch_size=1, 
+        = dataloader_util.get_data_loaders(dataset_name, train_batch_size=1000, 
         val_batch_size=1, test_batch_size=100, train_shuffle=False,
         val_split=0.1)
     model = model_class(config=None) # using default model config

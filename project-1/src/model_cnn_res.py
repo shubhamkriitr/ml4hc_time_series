@@ -17,7 +17,156 @@ logger = logging.getLogger(name=__name__)
 MODEL_CNN_RES = "CNN with Residual Blocks"
 
 
+class SimpleCnnWithResidualConnection(nn.Module):
 
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__()
+
+        self.expand_channel = nn.Sequential(
+            nn.Conv1d(in_channels=1, out_channels=16, kernel_size=5, stride=1, padding=2),
+            nn.BatchNorm1d(num_features=16),
+            nn.ReLU())
+        
+        self.block_0 = nn.Sequential(
+            nn.Conv1d(in_channels=16, out_channels=16, kernel_size=5, stride=1, padding=2),
+            nn.BatchNorm1d(num_features=16),
+            nn.ReLU(),
+            nn.Conv1d(in_channels=16, out_channels=16, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm1d(num_features=16),
+            nn.ReLU()
+        )
+
+
+        self.downsample_0 = nn.Sequential(
+            nn.ReLU(),
+            nn.MaxPool1d(kernel_size=3, stride=2),
+            nn.Conv1d(in_channels=16, out_channels=32, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm1d(num_features=32),
+            nn.ReLU()
+        )
+
+        self.block_1 = nn.Sequential(
+            nn.Conv1d(in_channels=32, out_channels=32, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm1d(num_features=32),
+            nn.ReLU(),
+            nn.Conv1d(in_channels=32, out_channels=32, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm1d(num_features=32),
+            nn.ReLU()
+        )
+
+        self.downsample_1 = nn.Sequential(
+            nn.ReLU(),
+            nn.MaxPool1d(kernel_size=3, stride=2),
+            nn.Conv1d(in_channels=16*2, out_channels=32*2, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm1d(num_features=32*2),
+            nn.ReLU()
+        )
+
+        self.block_2 = nn.Sequential(
+            nn.Conv1d(in_channels=32*2, out_channels=32*2, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm1d(num_features=32*2),
+            nn.ReLU(),
+            nn.Conv1d(in_channels=32*2, out_channels=32*2, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm1d(num_features=32*2),
+            nn.ReLU()
+        )
+
+        self.downsample_2 = nn.Sequential(
+            nn.ReLU(),
+            nn.MaxPool1d(kernel_size=3, stride=2),
+            nn.Conv1d(in_channels=16*4, out_channels=32*4, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm1d(num_features=32*4),
+            nn.ReLU()
+        )
+
+        self.block_3 = nn.Sequential(
+            nn.Conv1d(in_channels=32*4, out_channels=32*4, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm1d(num_features=32*4),
+            nn.ReLU(),
+            nn.Conv1d(in_channels=32*4, out_channels=32*4, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm1d(num_features=32*4),
+            nn.ReLU()
+        )
+
+        self.downsample_3 = nn.Sequential(
+            nn.ReLU(),
+            nn.MaxPool1d(kernel_size=3, stride=2),
+            nn.Conv1d(in_channels=16*8, out_channels=32*8, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm1d(num_features=32*8),
+            nn.ReLU()
+        )
+
+        self.block_4 = nn.Sequential(
+            nn.Conv1d(in_channels=32*8, out_channels=32*8, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm1d(num_features=32*8),
+            nn.ReLU(),
+            nn.Conv1d(in_channels=32*8, out_channels=32*8, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm1d(num_features=32*8),
+            nn.ReLU()
+        )
+
+        self.downsample_4 = nn.Sequential(
+            nn.ReLU(),
+            nn.MaxPool1d(kernel_size=3, stride=2),
+            nn.Conv1d(in_channels=32*8, out_channels=16, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm1d(num_features=16),
+            nn.ReLU()
+        )
+
+        
+        self.flatten = nn.Flatten()
+
+        self.fc_block = nn.Sequential(
+            nn.Linear(in_features=64, out_features=64),
+            nn.ReLU(),
+            nn.Linear(in_features=64, out_features=2),
+            nn.ReLU()
+        )
+        self.softmax = nn.Softmax(dim=1)
+
+        #generic operations
+        self.relu = nn.ReLU()
+        
+
+    def forward(self, x):
+        output_ = self.expand_channel(x)
+        identity_output_ = output_
+
+        output_ = self.block_0(output_)
+        output_ = identity_output_ + output_ # shortcut connection
+        output_ = self.downsample_0(output_)
+        identity_output_ = output_
+
+        output_ = self.block_1(output_)
+        output_ = identity_output_ + output_ # shortcut connection
+        output_ = self.downsample_1(output_)
+        identity_output_ = output_
+
+        output_ = self.block_2(output_)
+        output_ = identity_output_ + output_ # shortcut connection
+        output_ = self.downsample_2(output_)
+        identity_output_ = output_
+
+        output_ = self.block_3(output_)
+        output_ = identity_output_ + output_ # shortcut connection
+        output_ = self.downsample_3(output_)
+        identity_output_ = output_
+
+        output_ = self.block_4(output_)
+        output_ = identity_output_ + output_ # shortcut connection
+        
+        output_ = self.relu(output_)
+        output_ = self.downsample_4(output_)
+
+        output_ = self.flatten(output_)
+
+        output_ = self.fc_block(output_)
+
+        output_ = self.softmax(output_)
+
+        return output_
+    
+    
 
 class ResidualBlock(nn.Module):
     def __init__(self, num_input_channels, layerwise_num_ouput_channels,
@@ -80,11 +229,9 @@ class ResidualBlock(nn.Module):
             )
 
             batchnorm_layer = nn.BatchNorm1d(num_features=out_channels)
-            dropout_layer = nn.Dropout(p=0.2)
 
             current_block.append(conv_layer)
             current_block.append(batchnorm_layer)
-            current_block.append(dropout_layer)
 
             if shortcut_connection_flags[idx] == 1:
                 sequential_group = nn.Sequential(*current_block)
@@ -94,7 +241,9 @@ class ResidualBlock(nn.Module):
 
             else:
                 relu_layer = nn.ReLU()
+                dropout_layer = nn.Dropout(p=0.2)
                 current_block.append(relu_layer)
+                current_block.append(dropout_layer)
         
         self.blocks = nn.ModuleList(layer_blocks)
         self.relu_op = nn.ReLU()
@@ -138,6 +287,11 @@ class CnnWithResidualBlocks(nn.Module):
     def __init__(self, config) -> None:
         super().__init__()
 
+        self.process_config(config=config)
+
+        self._build_model()
+    
+    def process_config(self, config):
         self.default_config = {
             "num_input_channels": 1,
 
@@ -159,21 +313,21 @@ class CnnWithResidualBlocks(nn.Module):
             # the residual block
             "residual_block_config": {
                 # the stride to use when downsampling a map
-                "downsampling_strides": [2, 2, 2],
-                "kernel_sizes": [3, 3, 3],
+                "downsampling_strides": [2, 2, 2, 2, 2],
+                "kernel_sizes": [3, 3, 3, 3, 3],
 
                 # this is the number of conv blocks used in each of the 
                 # residual blocks. (It must be an even number)
-                "num_conv_layers_in_blocks": [2, 2, 2],
+                "num_conv_layers_in_blocks": [2, 2, 2, 2, 4],
 
                 # it is a list of number of output channels for each of the
                 # residual block (in order)
-                "num_filters": [32, 64, 128],
+                "num_filters": [16, 32, 64, 128, 256],
 
 
             },
 
-            "fully_connected_layer_input_size": 128,
+            "fully_connected_layer_input_size": 256,
 
             "num_classes": 5
         }
@@ -183,8 +337,6 @@ class CnnWithResidualBlocks(nn.Module):
         if config is not None:
             self.config = config
 
-        self._build_model()
-
     def forward(self, x) :
         out_ = self.intial_transformation(x)
 
@@ -193,7 +345,7 @@ class CnnWithResidualBlocks(nn.Module):
             out_ = block(out_)
 
         # apply avegrage pooling
-        out_ = self.average_pooling(out_)
+        out_ = self.pooling(out_)
 
         # flatten and feed to Fully connected layer
         out_ = self.flatten(out_)
@@ -292,7 +444,7 @@ class CnnWithResidualBlocks(nn.Module):
         self.residual_blocks = self.get_residual_blocks(self.config,
                                         num_input_channels=ft_output_channels)
 
-        self.average_pooling = nn.AdaptiveAvgPool1d(1)
+        self.pooling = nn.AdaptiveAvgPool1d(1)
 
         self.fc = nn.Linear(self.config["fully_connected_layer_input_size"],
                                 self.config["num_classes"])
@@ -317,8 +469,6 @@ class BaseTrainer(object):
 
         # read from config: TODO
         self.max_epoch = 100
-        # self.batch_size = 16
-        self.lr = 1e-3
         self.optimizer = optimizer
 
 
@@ -388,24 +538,25 @@ class CnnTrainer(BaseTrainer):
 
 
 class CnnWithResidualBlocksPTB(CnnWithResidualBlocks):
-    def __init__(self, config) -> None:
-        super().__init__(config)
-        self.config["num_classes"] = 2
+    def process_config(self, config):
+        super().process_config(config)
+        self.config["num_classes"] = 2 # change the number of classes for PTB
+        # keeo rest of the architecture same as CnnWithResidualBlocks
         
 
 def do_sample_training():
-    cost_function = nn.CrossEntropyLoss()
-    dataloader_util = DataLoaderUtil()
+    cost_function = nn.CrossEntropyLoss() #
+    dataloader_util = DataLoaderUtilMini()
 
     dataset_name = DATA_PTBDB # or DATA_MITBIH
-    model_class = CnnWithResidualBlocksPTB # or CnnWithResidualBlocks
+    model_class = SimpleCnnWithResidualConnection #CnnWithResidualBlocksPTB # or CnnWithResidualBlocks
 
     train_loader, val_loader, test_loader \
-        = dataloader_util.get_data_loaders(dataset_name, train_batch_size=100, 
-        val_batch_size=1, test_batch_size=100, train_shuffle=True,
+        = dataloader_util.get_data_loaders(dataset_name, train_batch_size=1, 
+        val_batch_size=1, test_batch_size=100, train_shuffle=False,
         val_split=0.1)
     model = model_class(config=None) # using default model config
-    opti = Adam(lr=1e-3, params=model.parameters(), weight_decay=1e-4)
+    opti = Adam(lr=1e-3, params=model.parameters(), weight_decay=1e-6)
 
     def batch_callback(model, batch_data, global_batch_number,
                     current_epoch, current_epoch_batch_number, **kwargs):
@@ -417,14 +568,14 @@ def do_sample_training():
                     current_epoch, current_epoch_batch_number, **kwargs):
         file_path = get_timestamp_str()\
             + f"epoch_{current_epoch}_gbatch_{global_batch_number}.ckpt"
-        torch.save(model.state_dict(), file_path)
+        # torch.save(model.state_dict(), file_path)
         
         model.eval()
 
         num_batches = 0
         acc_sum = 0
 
-        n_mc_samples = 4
+        n_mc_samples = 1
         with torch.no_grad():
             for i in [1]: #x, y_true in train_loader:
                 x = test_loader.dataset.x

@@ -4,13 +4,13 @@ import numpy as np
 from data_loader import (MITBIHDataLoader, PTBDataLoader, DataLoaderUtil,
                             DATA_MITBIH, DATA_PTBDB, DataLoaderUtilMini)
 import torch
-from torch.optim.optimizer import Optimizer
 from torch.optim.adam import Adam
 
 import copy
 import logging
 from sklearn.metrics import accuracy_score, f1_score
 from util import get_timestamp_str
+from trainingutil import CnnTrainer
 
 logger = logging.getLogger(name=__name__)
 
@@ -119,13 +119,15 @@ class SimpleCnnWithResidualConnection(nn.Module):
         self.fc_block = nn.Sequential(
             nn.Linear(in_features=64, out_features=64),
             nn.ReLU(),
-            nn.Linear(in_features=64, out_features=2),
+            nn.Linear(in_features=64, out_features=5),
             nn.ReLU()
         )
         self.softmax = nn.Softmax(dim=1)
 
         #generic operations
         self.relu = nn.ReLU()
+
+        self.initialize_parameters()
         
 
     def forward(self, x):
@@ -165,6 +167,17 @@ class SimpleCnnWithResidualConnection(nn.Module):
         output_ = self.softmax(output_)
 
         return output_
+    
+    def initialize_parameters(self):
+        for idx, m in enumerate(self.modules()):
+            print(idx, '->', m)
+            if isinstance(m, (nn.Conv1d, nn.Linear)):
+                print("ConvLayer or LinearLayer")
+                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+            elif isinstance(m, nn.BatchNorm1d):
+                print("BatchNormLayer")
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
     
     
 
@@ -454,89 +467,6 @@ class CnnWithResidualBlocks(nn.Module):
 
 
 
-    
-
-class BaseTrainer(object):
-
-    def __init__(self, model: nn.Module, dataloader, cost_function,
-                 optimizer: Optimizer,
-                batch_callbacks=[], epoch_callbacks=[]) -> None:
-        self.model = model
-        self.cost_function = cost_function
-        self.dataloader = dataloader
-        self.batch_callbacks = batch_callbacks
-        self.epoch_callbacks = epoch_callbacks
-
-        # read from config: TODO
-        self.max_epoch = 100
-        self.optimizer = optimizer
-
-
-    def train(self):
-        global_batch_number = 0
-        current_epoch_batch_number = 0
-        for current_epoch in range(1, self.max_epoch + 1):
-            current_epoch_batch_number = 0
-            for batch_data in self.dataloader:
-                global_batch_number += 1
-                current_epoch_batch_number += 1
-
-                # perform one training step
-                self.training_step(batch_data, global_batch_number,
-                                    current_epoch, current_epoch_batch_number)
-            self.invoke_epoch_callbacks(self.model, global_batch_number,
-                                current_epoch, current_epoch_batch_number)
-            
-    def training_step(self, batch_data,  global_batch_number, current_epoch,
-                    current_epoch_batch_number):
-        
-        # make one training step
-        
-        raise NotImplementedError()
-
-    def invoke_epoch_callbacks(self, model, global_batch_number,
-                                current_epoch, current_epoch_batch_number):
-        self.invoke_callbacks(self.epoch_callbacks, 
-                    [self.model, None, global_batch_number,
-                    current_epoch, current_epoch_batch_number], {})
-
-    def invoke_callbacks(self, callbacks, args: list, kwargs: dict):
-        for callback in callbacks:
-            try:
-                callback(*args, **kwargs)
-            except Exception as exc:
-                logger.error(exc)
-
-class CnnTrainer(BaseTrainer):
-
-    def training_step(self, batch_data, global_batch_number,
-                        current_epoch, current_epoch_batch_number):
-        # make sure training mode is on 
-        self.model.train()
-
-        # reset optimizer
-        self.optimizer.zero_grad()
-
-        # unpack batch data
-        x, y_true = batch_data
-
-        # compute model prediction
-        y_pred = self.model(x)
-
-        # compute loss
-        loss = self.cost_function(input=y_pred, target=y_true)
-
-        # backward pass
-        loss.backward()
-
-        # take optimizer step
-        self.optimizer.step()
-
-        self.invoke_callbacks(self.batch_callbacks, 
-                    [self.model, batch_data, global_batch_number,
-                    current_epoch, current_epoch_batch_number], {"loss": loss})
-
-
 class CnnWithResidualBlocksPTB(CnnWithResidualBlocks):
     def process_config(self, config):
         super().process_config(config)
@@ -545,14 +475,17 @@ class CnnWithResidualBlocksPTB(CnnWithResidualBlocks):
         
 
 def do_sample_training():
-    cost_function = nn.CrossEntropyLoss() #
+    # class_frequencies = torch.tensor([72471,  2223,  5788,   641,  6431], dtype=torch.float32)
+    # class_weights = torch.max(class_frequencies)/(class_frequencies)
+    # cost_function = nn.CrossEntropyLoss(weight=class_weights, reduction='mean') #
+    cost_function = nn.CrossEntropyLoss( ) #
     dataloader_util = DataLoaderUtil()
 
-    dataset_name = DATA_PTBDB # or DATA_MITBIH
+    dataset_name = DATA_MITBIH  # DATA_PTBDB # or DATA_MITBIH
     model_class = SimpleCnnWithResidualConnection #CnnWithResidualBlocksPTB # or CnnWithResidualBlocks
 
     train_loader, val_loader, test_loader \
-        = dataloader_util.get_data_loaders(dataset_name, train_batch_size=1000, 
+        = dataloader_util.get_data_loaders(dataset_name, train_batch_size=200, 
         val_batch_size=1, test_batch_size=100, train_shuffle=False,
         val_split=0.1)
     model = model_class(config=None) # using default model config

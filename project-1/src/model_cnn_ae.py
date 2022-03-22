@@ -112,6 +112,16 @@ class UnetDecoder(nn.Module):
 
         return output_
         
+class UnetEncoderDecoder(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.encoder = UnetEncoder()
+        self.decoder = UnetDecoder()
+    
+    def forward(self, x):
+        output_ = self.encoder(x)
+        output_ = self.decoder(output_)
+        return output_
 
 
 

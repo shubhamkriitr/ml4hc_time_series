@@ -10,10 +10,13 @@ DATASET_LOC_MITBIH_TRAIN = "../resources/input/mitbih_train.csv"
 DATASET_LOC_MITBIH_TEST = "../resources/input/mitbih_test.csv"
 DATASET_LOC_PTBDB_NORMAL = "../resources/input/ptbdb_normal.csv"
 DATASET_LOC_PTBDB_ABNORMAL = "../resources/input/ptbdb_abnormal.csv"
-DATA_MITBIH = "Dataset 1"
-DATA_PTBDB = "Dataset 2"
-DATA_MITBIH_AUTO_ENC = "Dataset 1 for AutoEncoders"
-DATA_PTBDB_AUTO_ENC = "Dataset 2 for AutoEncoders"
+
+# these class names are used in config and in DataLoaderUtil
+# to refer the the two datsets for different tasks
+DATA_MITBIH = "MITBIHDataLoader"
+DATA_PTBDB = "PTBDataLoader"
+DATA_MITBIH_AUTO_ENC = "MITBIHDataLoaderForAutoEncoder" # for training auto encoder
+DATA_PTBDB_AUTO_ENC = "PTBDataLoaderForAutoEncoder"
 
 class ClassificationDataset(Dataset):
     def __init__(self, x, y):

@@ -12,6 +12,9 @@ DATASET_LOC_PTBDB_NORMAL = "../resources/input/ptbdb_normal.csv"
 DATASET_LOC_PTBDB_ABNORMAL = "../resources/input/ptbdb_abnormal.csv"
 DATA_MITBIH = "Dataset 1"
 DATA_PTBDB = "Dataset 2"
+DATA_MITBIH_AUTO_ENC = "Dataset 1 for AutoEncoders"
+DATA_PTBDB_AUTO_ENC = "Dataset 2 for AutoEncoders"
+
 class ClassificationDataset(Dataset):
     def __init__(self, x, y):
         self.x = x
@@ -26,13 +29,21 @@ class ClassificationDataset(Dataset):
 
 class DataLoaderUtil:
     def __init__(self) -> None:
-        pass
+        self.x_data_type = torch.float32
+        self.y_data_type = None # set in prepare_data_loader
 
     def prepare_data_loader(self, dataset_name):
+        self.y_data_type = torch.long
         if dataset_name == DATA_MITBIH:
             dataloader = MITBIHDataLoader()
         elif dataset_name == DATA_PTBDB:
             dataloader = PTBDataLoader()
+        elif dataset_name == DATA_MITBIH_AUTO_ENC:
+            self.y_data_type = torch.float32
+            dataloader = MITBIHDataLoaderForAutoEncoder()
+        elif dataset_name == DATA_PTBDB_AUTO_ENC:
+            self.y_data_type = torch.float32
+            dataloader = PTBDataLoaderForAutoEncoder()
 
         return dataloader
         
@@ -41,10 +52,10 @@ class DataLoaderUtil:
         x_train, y_train, x_test, y_test = dataloader.load_data()
 
         # get torch tensors
-        x_train, x_test = [torch.tensor(data=data_item, dtype=torch.float32) 
+        x_train, x_test = [torch.tensor(data=data_item, dtype=self.x_data_type) 
                             for data_item in [x_train, x_test]]
-        y_train, y_test = [torch.tensor(data=data_item, dtype=torch.long) for 
-               data_item in [y_train, y_test]]
+        y_train, y_test = [torch.tensor(data=data_item, dtype=self.y_data_type) 
+                             for data_item in [y_train, y_test]]
 
         # Pytorch expects channel first dimension ordering
         # therefore transposing to bring channel first
@@ -134,6 +145,28 @@ class PTBDataLoader:
         Y_test = np.array(df_test[187].values).astype(np.int8)
         X_test = np.array(df_test[list(range(187))].values)[..., np.newaxis]
         return X, Y, X_test, Y_test
+
+
+class MITBIHDataLoaderForAutoEncoder(MITBIHDataLoader):
+    def __init__(self):
+        super().__init__()
+    
+    def load_data(self):
+        x, _, x_test, _ =  super().load_data()
+        y = x
+        y_test = x_test
+        return x, y, x_test, y_test
+
+
+class PTBDataLoaderForAutoEncoder(PTBDataLoader):
+    def __init__(self):
+        super().__init__()
+    
+    def load_data(self):
+        x, _, x_test, _ =  super().load_data()
+        y = x
+        y_test = x_test
+        return x, y, x_test, y_test
 
 if __name__ == "__main__":
     dataloader_util = DataLoaderUtil()

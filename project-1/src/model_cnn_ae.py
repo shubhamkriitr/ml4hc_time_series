@@ -129,6 +129,44 @@ class UnetEncoderDecoder(nn.Module):
         return output_
 
 
+class UnetPretrainEncoderWithTrainableClassifierHead(nn.Module):
+    def __init__(self, config={"num_classes": 5}) -> None:
+        super().__init__()
+        self.num_classes = config["num_classes"]
+        self.encoder = UnetEncoder()
+        self.classifier = nn.Sequential(
+            nn.Flatten(), # flatten the feature map
+            nn.Linear(in_features=46, out_features=16), # 
+            nn.ReLU(),
+            nn.Linear(in_features=16, out_features=self.num_classes),
+            nn.ReLU()
+        )
+        self.softmax = nn.Softmax(dim=1)
+    
+    def forward(self, x):
+        output_, pooling_indices = self.encoder(x)
+        z = output_[0] # feature in low dimensional latent space
+        output_ = self.classifier(z)
+        output_ = self.softmax(output_)
+        return output_
+    
+    def load_state_dict(self, state_dict, strict=False):
+        # Since decoder keys are not needed and classifier keys
+        # will be missing in the model_state_dict, therefore, setting 
+        # strict to `False` (as default value)
+        super().load_state_dict(state_dict, strict=strict)
+
+        # Also freezing the encoder layers:
+        for name, param in self.named_parameters():
+            if name.startswith("encoder."):
+                param.requires_grad = False
+            # Also make sure these weights are not passed to the optimizer
+
+def test_load_model_weights(model: nn.Module, weights_path):
+    model_state_dict = torch.load(weights_path)
+    model.load_state_dict(state_dict=model_state_dict)
+    for k in model_state_dict:
+        print(k)
 
 if __name__ == "__main__":
     encoder = UnetEncoder()
@@ -146,6 +184,14 @@ if __name__ == "__main__":
     
     encoder = UnetEncoder()
     decoder = UnetDecoder()
+    unet_enc_dec = UnetEncoderDecoder()
+    unet_enc_classifier = UnetPretrainEncoderWithTrainableClassifierHead()
+
+    weights_path = "runs/2022-03-23_132933__unet_ae/best_model.ckpt"
+
+    test_load_model_weights(unet_enc_dec, weights_path)
+    test_load_model_weights(unet_enc_classifier, weights_path)
+
 
     for batch_data in train_loader:
         x, y = batch_data

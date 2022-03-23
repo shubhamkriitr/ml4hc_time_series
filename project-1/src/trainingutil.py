@@ -210,12 +210,32 @@ class ExperimentPipeline(BaseExperimentPipeline):
         return model
     
     def prepare_optimizer(self):
+        trainable_params, trainable_param_names, frozen_params, \
+                frozen_param_names = self.filter_trainer_parameters()
+        print(f"Frozen Parameters: {frozen_param_names}")
+        print(f"Trainable Parameters: {trainable_param_names} ")
         lr = self.config["learning_rate"]
         weight_decay = self.config["weight_decay"]
         self.optimizer = Adam(
             lr=lr, weight_decay=weight_decay,
-            params=self.model.parameters()
+            params=trainable_params
             )
+    
+    def filter_trainer_parameters(self):
+        trainable_params = []
+        trainable_param_names = []
+        frozen_params = []
+        frozen_param_names = []
+        for name, param in self.model.named_parameters():
+            if param.requires_grad:
+                trainable_params.append(param)
+                trainable_param_names.append(name)
+            else:
+                frozen_params.append(param)
+                frozen_param_names.append(name)
+        
+        return trainable_params, trainable_param_names, frozen_params, \
+                frozen_param_names
 
     def prepare_summary_writer(self):
         experiment_tag = self.config["experiment_metadata"]["tag"]

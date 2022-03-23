@@ -198,6 +198,7 @@ class ExperimentPipeline(BaseExperimentPipeline):
     def prepare_model(self):
         # TODO: use model config too (or make it work by creating new class)
         model = ModelFactory().get(self.config["model_class_name"])()
+        self.model = model
 
         if self.config["load_from_checkpoint"]:
             checkpoint_path = self.config["checkpoint_path"]
@@ -206,8 +207,7 @@ class ExperimentPipeline(BaseExperimentPipeline):
             logger.info(str(self.model))
             logger.info(f"Model Loaded")
         
-        self.model = model
-        return model
+        return self.model
     
     def prepare_optimizer(self):
         trainable_params, trainable_param_names, frozen_params, \
@@ -258,7 +258,7 @@ class ExperimentPipeline(BaseExperimentPipeline):
             self.cost_function = nn.MSELoss()
         elif self.config["cost_function_class_name"] == "CrossEntropyLoss":
             print("Using: CrossEntropyLoss")
-            self.cost_function == nn.CrossEntropyLoss()
+            self.cost_function = nn.CrossEntropyLoss()
         else:
             raise NotImplementedError()
 
@@ -283,10 +283,7 @@ class ExperimentPipeline(BaseExperimentPipeline):
     
     def epoch_callback(self, model: nn.Module, batch_data, global_batch_number,
                     current_epoch, current_epoch_batch_number, **kwargs):
-        file_path = get_timestamp_str()\
-            + f"epoch_{current_epoch}_gbatch_{global_batch_number}.ckpt"
-        # torch.save(model.state_dict(), file_path)
-        if current_epoch == 0:
+        if current_epoch == 1: # the epoch just finished
             # save the config
             self.save_config()
     
@@ -338,17 +335,59 @@ class ExperimentPipelineUnetAE(ExperimentPipeline):
             "best_model.ckpt")
             torch.save(model.state_dict(), file_path)
 
+class ExperimentPipelineUnetPretrained(ExperimentPipeline):
+    def __init__(self, config) -> None:
+        super().__init__(config)
+        self.best_metric = None
 
+    def epoch_callback(self, model: nn.Module, batch_data, global_batch_number,
+     current_epoch, current_epoch_batch_number, **kwargs):
+        if current_epoch == 1: # the epoch just finished
+            # save the config
+            self.save_config()
+    
+        model.eval()
+        with torch.no_grad():
+            x = self.test_loader.dataset.x
+            y_true = self.test_loader.dataset.y
+            y_pred_prob = model(x)
+            y_pred = torch.argmax(y_pred_prob, axis=1)
+            f1 = f1_score(y_true, y_pred, average="macro")
+
+            print("Test f1 score : %s "% f1)
+
+            acc = accuracy_score(y_true, y_pred)
+            
+            loss = self.cost_function(input=y_pred_prob, target=y_true)
+            print(f"Test acc: {acc}")
+            print(f"Test loss: {loss}")
+            self.summary_writer.add_scalar("test/loss", loss, current_epoch)
+            self.summary_writer.add_scalar("test/F1", f1, current_epoch)
+            self.summary_writer.add_scalar("test/Accuracy", acc, current_epoch)
+            self.summary_writer.flush()
+        
+        metric_to_use_for_model_selection = f1 # TODO: can be pulled in config
+        metric_name = "F1-Score"
+        if self.best_metric is None or \
+             (self.best_metric < metric_to_use_for_model_selection):
+            print(f"Saving model: {metric_name} changed from {self.best_metric}"
+                  f" to {metric_to_use_for_model_selection}")
+            self.best_metric = metric_to_use_for_model_selection
+            file_path = os.path.join(self.current_experiment_directory,
+            "best_model.ckpt")
+            torch.save(model.state_dict(), file_path)
+        return self.best_metric
 
         
 PIPELINE_NAME_TO_CLASS_MAP = {
     "ExperimentPipeline": ExperimentPipeline,
-    "ExperimentPipelineUnetAE": ExperimentPipelineUnetAE
+    "ExperimentPipelineUnetAE": ExperimentPipelineUnetAE,
+    "ExperimentPipelineUnetPretrained": ExperimentPipelineUnetPretrained
 }
 
 
 if __name__ == "__main__":
-    DEFAULT_CONFIG_LOCATION = "experiment_configs/sample.yaml"
+    DEFAULT_CONFIG_LOCATION = "experiment_configs/train_unet_with_pretrained_wts.yaml"
     argparser = ArgumentParser()
     argparser.add_argument("--config", type=str,
                             default=DEFAULT_CONFIG_LOCATION)

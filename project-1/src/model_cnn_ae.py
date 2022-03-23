@@ -37,12 +37,11 @@ class UnetEncoder(nn.Module):
             nn.Conv1d(in_channels=32, out_channels=64, kernel_size=5, stride=1, padding='same'),
             nn.BatchNorm1d(num_features=64),
             nn.ReLU(),
-            nn.Conv1d(in_channels=64, out_channels=32, kernel_size=5, stride=1, padding='same'),
-            nn.BatchNorm1d(num_features=32),
+            nn.Conv1d(in_channels=64, out_channels=1, kernel_size=5, stride=1, padding='same'),
+            # nn.BatchNorm1d(num_features=32),
             nn.ReLU()
         )
 
-        self.unpool_1 = nn.MaxUnpool1d(kernel_size=2)
 
 
 
@@ -66,6 +65,12 @@ class UnetDecoder(nn.Module):
 
     def __init__(self) -> None:
         super().__init__()
+
+        self.expand_bottleneck_channel = nn.Sequential(
+            nn.Conv1d(in_channels=1, out_channels=32, kernel_size=3, stride=1, padding='same'),
+            nn.BatchNorm1d(num_features=32),
+            nn.ReLU()
+        )
 
         self.unpool_1 = nn.MaxUnpool1d(kernel_size=2)
 
@@ -92,6 +97,7 @@ class UnetDecoder(nn.Module):
     
     def forward(self, encoder_ouputs, pooling_indices):
         bottleneck_output, enc_1, enc_0 = encoder_ouputs
+        bottleneck_output = self.expand_bottleneck_channel(bottleneck_output)
         indices_1, indices_0 = pooling_indices
 
         unpooled_1 = self.unpool_1(bottleneck_output, indices_1,

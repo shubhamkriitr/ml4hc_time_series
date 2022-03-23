@@ -280,12 +280,40 @@ class ExperimentPipeline(BaseExperimentPipeline):
             print(f"Test loss: {loss}")
             self.summary_writer.add_scalar("test/loss", loss, current_epoch)
             self.summary_writer.flush()
+        return loss
 
-
-            
-
+    def save_config(self):
+        file_path = os.path.join(self.current_experiment_directory,
+                                 "config.yaml")
         
 
+
+class ExperimentPipelineUnetAE(ExperimentPipeline):
+    def __init__(self, config) -> None:
+        super().__init__(config)
+        self.best_loss = 100000000000
+
+    def epoch_callback(self, model: nn.Module, batch_data, global_batch_number,
+     current_epoch, current_epoch_batch_number, **kwargs):
+        loss = super().epoch_callback(model, batch_data, global_batch_number, 
+        current_epoch, current_epoch_batch_number, **kwargs)
+
+
+        if loss < self.best_loss:
+            print(f"Saving model: best_loss changed from {self.best_loss}"
+                  f" to {loss}")
+            self.best_loss = loss
+            file_path = os.path.join(self.current_experiment_directory,
+            "best_model.ckpt")
+            torch.save(model.state_dict(), file_path)
+
+
+
+        
+PIPELINE_NAME_TO_CLASS_MAP = {
+    "ExperimentPipeline": ExperimentPipeline,
+    "ExperimentPipelineUnetAE": ExperimentPipelineUnetAE
+}
 
 
 if __name__ == "__main__":
@@ -299,9 +327,10 @@ if __name__ == "__main__":
     with open(args.config, 'r', encoding="utf-8") as f:
         config_data = yaml.load(f, Loader=yaml.FullLoader)
     
-    if config_data["pipeline_class"] == "ExperimentPipeline":
-        pipeline = ExperimentPipeline(config=config_data)
-        pipeline.prepare_experiment()
-        pipeline.run_experiment()
+
+    pipeline_class = PIPELINE_NAME_TO_CLASS_MAP[ config_data["pipeline_class"]]
+    pipeline = pipeline_class(config=config_data)
+    pipeline.prepare_experiment()
+    pipeline.run_experiment()
 
 

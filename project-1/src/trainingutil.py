@@ -255,7 +255,7 @@ class ExperimentPipeline(BaseExperimentPipeline):
             f"[{current_epoch}/{current_epoch_batch_number}]"
             f" Loss: {kwargs['loss']}")
         if global_batch_number % self.config["tensorboard_log_frequency"] == 0:
-            self.summary_writer.add_scalar("train/loss", kwargs['loss'])
+            self.summary_writer.add_scalar("train/loss", kwargs['loss'], global_batch_number)
     
     def epoch_callback(self, model: nn.Module, batch_data, global_batch_number,
                     current_epoch, current_epoch_batch_number, **kwargs):
@@ -278,7 +278,8 @@ class ExperimentPipeline(BaseExperimentPipeline):
             loss = self.cost_function(input=y_pred, target=y_true)
 
             print(f"Test loss: {loss}")
-            self.summary_writer.add_scalar("test/loss", loss)
+            self.summary_writer.add_scalar("test/loss", loss, current_epoch)
+            self.summary_writer.flush()
 
 
             

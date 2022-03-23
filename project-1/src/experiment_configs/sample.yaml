@@ -3,7 +3,7 @@ experiment_metadata:
   description: "Trying out CNN autoencoder to learn features to be used later\
                 for classification."
   tag: "unet_ae"
-dataloader_class_name: "MITBIHDataLoaderForAutoEncoder"
+dataloader_class_name: "BalancedMITBIHDataLoaderForAutoEncoder"
 model_class_name: "CnnEncoderDecoder"
 load_from_checkpoint: false
 checkpoint_path: ""

@@ -17,7 +17,11 @@ DATA_MITBIH = "MITBIHDataLoader"
 DATA_PTBDB = "PTBDataLoader"
 DATA_MITBIH_BAL = "BalancedMITBIHDataLoader"
 DATA_MITBIH_AUTO_ENC = "MITBIHDataLoaderForAutoEncoder" # for training auto encoder
+DATA_MITBIH_AUTO_ENC_BAL = "BalancedMITBIHDataLoaderForAutoEncoder"
 DATA_PTBDB_AUTO_ENC = "PTBDataLoaderForAutoEncoder"
+
+
+MAX_SIZE_IN_BALANCED_DATASET = 3000 # max num of samples
 
 class ClassificationDataset(Dataset):
     def __init__(self, x, y):
@@ -47,6 +51,9 @@ class DataLoaderUtil:
         elif dataset_name == DATA_MITBIH_AUTO_ENC:
             self.y_data_type = torch.float32
             dataloader = MITBIHDataLoaderForAutoEncoder()
+        elif dataset_name == DATA_MITBIH_AUTO_ENC_BAL:
+            self.y_data_type = torch.float32
+            dataloader = BalancedMITBIHDataLoaderForAutoEncoder()
         elif dataset_name == DATA_PTBDB_AUTO_ENC:
             self.y_data_type = torch.float32
             dataloader = PTBDataLoaderForAutoEncoder()
@@ -134,27 +141,27 @@ class BalancedMITBIHDataLoader(MITBIHDataLoader):
     def load_data(self):
         x, y, x_test, y_test =  super().load_data()
         max_size = 3000
-        labels, frequencies = np.unique(y, return_counts=True)
-
-        x_new = []
-        y_new = []
-        for idx in range(labels.shape[0]):
-            current_label = labels[idx]
-            chunk_indices = np.where(y == current_label)[0]
-            x_new_chunk = x[chunk_indices]
-            y_new_chunk = y[chunk_indices]
-
-            if x_new_chunk.shape[0] > max_size:
-                x_new_chunk = x_new_chunk[0:max_size]
-                y_new_chunk = y_new_chunk[0:max_size]
-            
-            x_new.append(x_new_chunk)
-            y_new.append(y_new_chunk)
-        
-        x = np.concatenate(x_new, axis=0)
-        y = np.concatenate(y_new, axis=0)
+        x, y = balance_dataset(max_size, x, y)
 
         return x, y, x_test, y_test
+
+def balance_dataset(max_size, x, y):
+    labels, frequencies = np.unique(y, return_counts=True)
+    
+    final_selection_indices = []
+    for idx in range(labels.shape[0]):
+        current_label = labels[idx]
+        chunk_indices = np.where(y == current_label)[0]
+
+        if chunk_indices.shape[0] > max_size:
+            chunk_indices = chunk_indices[0:max_size]
+        
+        final_selection_indices.append(chunk_indices)
+
+    final_selection_indices = np.concatenate(final_selection_indices, axis=0)    
+    x = x[final_selection_indices]
+    y = y[final_selection_indices]
+    return x, y
 
 
 class PTBDataLoader:
@@ -195,6 +202,15 @@ class MITBIHDataLoaderForAutoEncoder(MITBIHDataLoader):
         y_test = x_test
         return x, y, x_test, y_test
 
+class BalancedMITBIHDataLoaderForAutoEncoder(MITBIHDataLoader):
+    def load_data(self):
+        x, true_labels, x_test, _ =  super().load_data()
+        y_test = x_test
+
+        x, true_labels = balance_dataset(MAX_SIZE_IN_BALANCED_DATASET,
+                            x, true_labels)
+        y = x
+        return x, y, x_test, y_test
 
 class PTBDataLoaderForAutoEncoder(PTBDataLoader):
     def __init__(self):

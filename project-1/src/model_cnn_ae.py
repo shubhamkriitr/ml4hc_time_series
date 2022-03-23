@@ -20,6 +20,9 @@ class UnetEncoder(nn.Module):
         self.block_0 = nn.Sequential(
             nn.Conv1d(in_channels=1, out_channels=16, kernel_size=5, stride=1, padding='same'),
             nn.BatchNorm1d(num_features=16),
+            nn.ReLU(),
+            nn.Conv1d(in_channels=16, out_channels=16, kernel_size=3, stride=1, padding='same'),
+            nn.BatchNorm1d(num_features=16),
             nn.ReLU()
         )
 
@@ -28,16 +31,19 @@ class UnetEncoder(nn.Module):
         self.block_1 = nn.Sequential(
             nn.Conv1d(in_channels=16, out_channels=32, kernel_size=3, stride=1, padding='same'),
             nn.BatchNorm1d(num_features=32),
+            nn.ReLU(),
+            nn.Conv1d(in_channels=32, out_channels=32, kernel_size=3, stride=1, padding='same'),
+            nn.BatchNorm1d(num_features=32),
             nn.ReLU()
         )
 
         self.pool_1 = nn.MaxPool1d(kernel_size=2, return_indices=True)
 
         self.bottleneck = nn.Sequential(
-            nn.Conv1d(in_channels=32, out_channels=64, kernel_size=5, stride=1, padding='same'),
+            nn.Conv1d(in_channels=32, out_channels=64, kernel_size=3, stride=1, padding='same'),
             nn.BatchNorm1d(num_features=64),
             nn.ReLU(),
-            nn.Conv1d(in_channels=64, out_channels=1, kernel_size=5, stride=1, padding='same'),
+            nn.Conv1d(in_channels=64, out_channels=2, kernel_size=3, stride=1, padding='same'),
             # nn.BatchNorm1d(num_features=32),
             nn.ReLU()
         )
@@ -67,7 +73,7 @@ class CnnDecoder(nn.Module):
         super().__init__()
 
         self.expand_bottleneck_channel = nn.Sequential(
-            nn.Conv1d(in_channels=1, out_channels=32, kernel_size=3, stride=1, padding='same'),
+            nn.Conv1d(in_channels=2, out_channels=32, kernel_size=3, stride=1, padding='same'),
             nn.BatchNorm1d(num_features=32),
             nn.ReLU()
         )
@@ -200,8 +206,12 @@ class UnetPretrainEncoderWithTrainableClassifierHead(nn.Module):
         self.num_classes = config["num_classes"]
         self.encoder = UnetEncoder()
         self.classifier = nn.Sequential(
+            nn.Conv1d(in_channels=2, out_channels=2, kernel_size=2, padding='same'),
+            nn.ReLU(),
+            nn.Conv1d(in_channels=2, out_channels=2, kernel_size=2, padding='same'), 
+            nn.ReLU(),
             nn.Flatten(), # flatten the feature map
-            nn.Linear(in_features=46, out_features=16), # 
+            nn.Linear(in_features=92, out_features=16),
             nn.ReLU(),
             nn.Linear(in_features=16, out_features=self.num_classes),
             nn.ReLU()

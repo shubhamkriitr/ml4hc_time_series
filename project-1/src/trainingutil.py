@@ -46,7 +46,7 @@ class BaseTrainer(object):
                 # perform one training step
                 self.training_step(batch_data, global_batch_number,
                                     current_epoch, current_epoch_batch_number)
-            self.invoke_epoch_callbacks(self.model, global_batch_number,
+            self.invoke_epoch_callbacks(self.model, batch_data, global_batch_number,
                                 current_epoch, current_epoch_batch_number)
             
     def training_step(self, batch_data,  global_batch_number, current_epoch,
@@ -56,10 +56,10 @@ class BaseTrainer(object):
         
         raise NotImplementedError()
 
-    def invoke_epoch_callbacks(self, model, global_batch_number,
+    def invoke_epoch_callbacks(self, model, batch_data, global_batch_number,
                                 current_epoch, current_epoch_batch_number):
         self.invoke_callbacks(self.epoch_callbacks, 
-                    [self.model, None, global_batch_number,
+                    [self.model, batch_data, global_batch_number,
                     current_epoch, current_epoch_batch_number], {})
 
     def invoke_callbacks(self, callbacks, args: list, kwargs: dict):
@@ -325,7 +325,9 @@ class ExperimentPipelineUnetAE(ExperimentPipeline):
      current_epoch, current_epoch_batch_number, **kwargs):
         loss = super().epoch_callback(model, batch_data, global_batch_number, 
         current_epoch, current_epoch_batch_number, **kwargs)
-
+        if current_epoch == 1:
+            with torch.no_grad():
+                self.summary_writer.add_graph(self.model, batch_data[0])
 
         if loss < self.best_loss:
             print(f"Saving model: best_loss changed from {self.best_loss}"
@@ -345,6 +347,8 @@ class ExperimentPipelineUnetPretrained(ExperimentPipeline):
         if current_epoch == 1: # the epoch just finished
             # save the config
             self.save_config()
+            with torch.no_grad():
+                self.summary_writer.add_graph(self.model, batch_data[0])
     
         model.eval()
         with torch.no_grad():
@@ -387,7 +391,7 @@ PIPELINE_NAME_TO_CLASS_MAP = {
 
 
 if __name__ == "__main__":
-    DEFAULT_CONFIG_LOCATION = "experiment_configs/train_unet_with_pretrained_wts.yaml"
+    DEFAULT_CONFIG_LOCATION = "experiment_configs/sample.yaml"
     argparser = ArgumentParser()
     argparser.add_argument("--config", type=str,
                             default=DEFAULT_CONFIG_LOCATION)

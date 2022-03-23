@@ -6,10 +6,10 @@ from pathlib import Path
 from torch.utils.data import DataLoader, Dataset
 import torch
 
-DATASET_LOC_MITBIH_TRAIN = "../resources/input/mitbih_train.csv"
-DATASET_LOC_MITBIH_TEST = "../resources/input/mitbih_test.csv"
-DATASET_LOC_PTBDB_NORMAL = "../resources/input/ptbdb_normal.csv"
-DATASET_LOC_PTBDB_ABNORMAL = "../resources/input/ptbdb_abnormal.csv"
+DATASET_LOC_MITBIH_TRAIN = "../input/mitbih_train.csv"
+DATASET_LOC_MITBIH_TEST = "../input/mitbih_test.csv"
+DATASET_LOC_PTBDB_NORMAL = "../input/ptbdb_normal.csv"
+DATASET_LOC_PTBDB_ABNORMAL = "../input/ptbdb_abnormal.csv"
 
 # these class names are used in config and in DataLoaderUtil
 # to refer the the two datsets for different tasks

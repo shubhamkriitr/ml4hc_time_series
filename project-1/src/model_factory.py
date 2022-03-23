@@ -1,9 +1,12 @@
 from model_cnn_ae import (UnetEncoder, UnetEncoderDecoder,
- CnnPretrainEncoderWithTrainableClassifierHead, CnnEncoderDecoder)
+ CnnPretrainEncoderWithTrainableClassifierHead, CnnEncoderDecoder,
+ CnnEncoder)
+from model_cnn_res import SimpleCnnWithResidualConnection
 
 MODEL_UNET_ENCODER = "UnetEncoder"
 MODEL_UNET_ENCODER_DECODER = "UnetEncoderDecoder"
 MODEL_CNN_ENCODER_DECODER = "CnnEncoderDecoder"
+MODEL_CNN_ENCODER = "CnnEncoder"
 MODEL_UNET_PRETRAINED_ENCODER_NN_CLASSIFIER = \
     "CnnPretrainEncoderWithTrainableClassifierHead"
 
@@ -13,7 +16,9 @@ MODEL_NAME_TO_CLASS_MAP = {
     MODEL_UNET_ENCODER_DECODER: UnetEncoderDecoder,
     MODEL_UNET_PRETRAINED_ENCODER_NN_CLASSIFIER:\
          CnnPretrainEncoderWithTrainableClassifierHead,
-    MODEL_CNN_ENCODER_DECODER: CnnEncoderDecoder
+    MODEL_CNN_ENCODER_DECODER: CnnEncoderDecoder,
+    MODEL_CNN_ENCODER: CnnEncoder,
+    "SimpleCnnWithResidualConnection": SimpleCnnWithResidualConnection
 }
 
 class ModelFactory(object):

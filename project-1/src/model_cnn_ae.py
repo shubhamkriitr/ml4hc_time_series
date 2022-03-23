@@ -11,7 +11,63 @@ import logging
 from sklearn.metrics import accuracy_score, f1_score
 from util import get_timestamp_str
 
+class ChannelMaxPooling(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+    
+    def forward(self, x):
+        x, _ = torch.max(x, dim=1, keepdim=True) # assuming dim 1 is channel dim
+        return x
 
+class GlobalMaxPooling(nn.Module):
+    def __init__(self, dims=None) -> None:
+        super().__init__()
+        self.dims = dims
+    
+    def forward(self, x):
+        x, _ = torch.max(x, dim=self.dims, keepdim=True) # assuming dim 1 is channel dim
+        return x
+class CnnEncoder(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.num_classes = 5
+        self.layers = nn.Sequential(
+            nn.Conv1d(in_channels=1, out_channels=16, kernel_size=5, stride=1, padding='same'),
+            nn.ReLU(),
+            nn.Conv1d(in_channels=16, out_channels=16, kernel_size=5, stride=1, padding='same'),
+            nn.ReLU(),
+            nn.MaxPool1d(kernel_size=2),
+            nn.Dropout(p=0.1),
+            nn.Conv1d(in_channels=16, out_channels=32, kernel_size=3, stride=1, padding='same'),
+            nn.ReLU(),
+            nn.Conv1d(in_channels=32, out_channels=32, kernel_size=3, stride=1, padding='same'),
+            nn.ReLU(),
+            nn.MaxPool1d(kernel_size=2),
+            nn.Dropout(p=0.1),
+            nn.Conv1d(in_channels=32, out_channels=32, kernel_size=3, stride=1, padding='same'),
+            nn.ReLU(),
+            nn.Conv1d(in_channels=32, out_channels=32, kernel_size=3, stride=1, padding='same'),
+            nn.ReLU(),
+            nn.MaxPool1d(kernel_size=2),
+            nn.Dropout(p=0.1),
+            nn.Conv1d(in_channels=32, out_channels=256, kernel_size=3, stride=1, padding='same'),
+            nn.ReLU(),
+            nn.Conv1d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding='same'),
+            nn.ReLU(),
+            GlobalMaxPooling(dims=(2)),
+            nn.Dropout(p=0.1),
+            nn.Flatten(),
+            nn.Linear(in_features=256, out_features=64),
+            nn.ReLU(),
+            nn.Linear(in_features=64, out_features=64),
+            nn.ReLU(),
+            nn.Linear(in_features=64, out_features=self.num_classes),
+            nn.Softmax(dim=1)
+        )
+
+    def forward(self, x):
+        out_ = self.layers(x)
+        return out_
 
 class UnetEncoder(nn.Module):
     def __init__(self) -> None:
@@ -19,61 +75,63 @@ class UnetEncoder(nn.Module):
 
         self.block_0 = nn.Sequential(
             nn.Conv1d(in_channels=1, out_channels=16, kernel_size=5, stride=1, padding='same'),
-            nn.BatchNorm1d(num_features=16),
+            #nn.BatchNorm1d(num_features=16),
             nn.ReLU(),
             nn.Conv1d(in_channels=16, out_channels=16, kernel_size=3, stride=1, padding='same'),
-            nn.BatchNorm1d(num_features=16),
-            nn.ReLU(),
-            nn.Dropout(p=0.2)
+            #nn.BatchNorm1d(num_features=16),
+            nn.ReLU()
         )
 
         self.pool_0 = nn.MaxPool1d(kernel_size=2, return_indices=True)
 
         self.block_1 = nn.Sequential(
+
+            nn.Dropout(p=0.1),
             nn.Conv1d(in_channels=16, out_channels=32, kernel_size=3, stride=1, padding='same'),
-            nn.BatchNorm1d(num_features=32),
+            #nn.BatchNorm1d(num_features=32),
             nn.ReLU(),
             nn.Conv1d(in_channels=32, out_channels=32, kernel_size=3, stride=1, padding='same'),
-            nn.BatchNorm1d(num_features=32),
-            nn.ReLU(),
-            nn.Dropout(p=0.2)
+            #nn.BatchNorm1d(num_features=32),
+            nn.ReLU()
         )
 
         self.pool_1 = nn.MaxPool1d(kernel_size=2, return_indices=True)
 
         self.block_2 = nn.Sequential(
+            nn.Dropout(p=0.1),
             nn.Conv1d(in_channels=32, out_channels=64, kernel_size=3, stride=1, padding='same'),
-            nn.BatchNorm1d(num_features=64),
+            #nn.BatchNorm1d(num_features=64),
             nn.ReLU(),
             nn.Conv1d(in_channels=64, out_channels=64, kernel_size=3, stride=1, padding='same'),
-            nn.BatchNorm1d(num_features=64),
-            nn.ReLU(),
-            nn.Dropout(p=0.2)
+            #nn.BatchNorm1d(num_features=64),
+            nn.ReLU()
+            
         )
 
         self.pool_2 = nn.MaxPool1d(kernel_size=2, return_indices=True)
 
         self.block_3 = nn.Sequential(
+            nn.Dropout(p=0.1),
             nn.Conv1d(in_channels=64, out_channels=256, kernel_size=3, stride=1, padding='same'),
-            nn.BatchNorm1d(num_features=256),
+            #nn.BatchNorm1d(num_features=256),
             nn.ReLU(),
             nn.Conv1d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding='same'),
-            nn.BatchNorm1d(num_features=256),
-            nn.ReLU(),
-            nn.Dropout(p=0.2)
+            #nn.BatchNorm1d(num_features=256),
+            nn.ReLU()
         )
 
         self.pool_3 = nn.MaxPool1d(kernel_size=2, return_indices=True)
 
 
         self.bottleneck = nn.Sequential(
+            nn.Dropout(p=0.1),
             nn.Conv1d(in_channels=256, out_channels=128, kernel_size=3, stride=1, padding='same'),
-            nn.BatchNorm1d(num_features=128),
+            #nn.BatchNorm1d(num_features=128),
             nn.ReLU(),
             nn.Conv1d(in_channels=128, out_channels=4, kernel_size=3, stride=1, padding='same'),
-            # nn.BatchNorm1d(num_features=32),
-            nn.ReLU(),
-            nn.Dropout(p=0.2)
+            # #nn.BatchNorm1d(num_features=32),
+            nn.ReLU()
+            
         )
 
 
@@ -111,7 +169,7 @@ class CnnDecoder(nn.Module):
 
         self.expand_bottleneck_channel = nn.Sequential(
             nn.Conv1d(in_channels=2, out_channels=32, kernel_size=3, stride=1, padding='same'),
-            nn.BatchNorm1d(num_features=32),
+            #nn.BatchNorm1d(num_features=32),
             nn.ReLU()
         )
 
@@ -119,7 +177,7 @@ class CnnDecoder(nn.Module):
 
         self.block_1 = nn.Sequential(
             nn.Conv1d(in_channels=32, out_channels=16, kernel_size=3, stride=1, padding='same'),
-            nn.BatchNorm1d(num_features=16),
+            #nn.BatchNorm1d(num_features=16),
             nn.ReLU()
         )
 
@@ -127,7 +185,7 @@ class CnnDecoder(nn.Module):
 
         self.block_0 = nn.Sequential(
             nn.Conv1d(in_channels=16, out_channels=16, kernel_size=3, stride=1, padding='same'),
-            nn.BatchNorm1d(num_features=16),
+            #nn.BatchNorm1d(num_features=16),
             nn.ReLU()
         )
 
@@ -165,7 +223,7 @@ class UnetDecoder(nn.Module):
 
         self.expand_bottleneck_channel = nn.Sequential(
             nn.Conv1d(in_channels=1, out_channels=32, kernel_size=3, stride=1, padding='same'),
-            nn.BatchNorm1d(num_features=32),
+            #nn.BatchNorm1d(num_features=32),
             nn.ReLU()
         )
 
@@ -173,14 +231,14 @@ class UnetDecoder(nn.Module):
 
         self.block_3 = nn.Sequential(
             nn.Conv1d(in_channels=64, out_channels=16, kernel_size=3, stride=1, padding='same'),
-            nn.BatchNorm1d(num_features=16),
+            #nn.BatchNorm1d(num_features=16),
             nn.ReLU()
         )
         self.unpool_2 = nn.MaxUnpool1d(kernel_size=2)
 
         self.block_2 = nn.Sequential(
             nn.Conv1d(in_channels=64, out_channels=16, kernel_size=3, stride=1, padding='same'),
-            nn.BatchNorm1d(num_features=16),
+            #nn.BatchNorm1d(num_features=16),
             nn.ReLU()
         )
 
@@ -188,7 +246,7 @@ class UnetDecoder(nn.Module):
 
         self.block_1 = nn.Sequential(
             nn.Conv1d(in_channels=64, out_channels=16, kernel_size=3, stride=1, padding='same'),
-            nn.BatchNorm1d(num_features=16),
+            #nn.BatchNorm1d(num_features=16),
             nn.ReLU()
         )
 
@@ -196,7 +254,7 @@ class UnetDecoder(nn.Module):
 
         self.block_0 = nn.Sequential(
             nn.Conv1d(in_channels=32, out_channels=16, kernel_size=3, stride=1, padding='same'),
-            nn.BatchNorm1d(num_features=16),
+            #nn.BatchNorm1d(num_features=16),
             nn.ReLU()
         )
 
@@ -243,7 +301,7 @@ class UnetEncoderDecoder(nn.Module):
 class CnnEncoderDecoder(nn.Module):
     def __init__(self) -> None:
         super().__init__()
-        self.encoder = UnetEncoder()
+        self.encoder = CnnEncoder()
         self.decoder = CnnDecoder()
     
     def forward(self, x):

@@ -6,9 +6,10 @@ import yaml
 from sklearn.metrics import accuracy_score, f1_score
 from torch import nn
 from torch.optim.adam import Adam
+from torch.optim.adamw import AdamW
 from torch.optim.optimizer import Optimizer
 from torch.utils.tensorboard import SummaryWriter
-
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 from data_loader import DataLoaderUtil
 from model_factory import ModelFactory
 from util import get_timestamp_str
@@ -216,10 +217,15 @@ class ExperimentPipeline(BaseExperimentPipeline):
         print(f"Trainable Parameters: {trainable_param_names} ")
         lr = self.config["learning_rate"]
         weight_decay = self.config["weight_decay"]
-        self.optimizer = Adam(
+        optimizer_class = AdamW # Adam
+        self.optimizer = optimizer_class(
             lr=lr, weight_decay=weight_decay,
             params=trainable_params
             )
+    
+    def prepare_scheduler(self):
+        self.scheduler = ReduceLROnPlateau(self.optimizer, 'min')
+        
     
     def filter_trainer_parameters(self):
         trainable_params = []
@@ -276,7 +282,7 @@ class ExperimentPipeline(BaseExperimentPipeline):
         
         if global_batch_number % self.config["batch_log_frequency"] == 0:
             print(
-            f"[{current_epoch}/{current_epoch_batch_number}]"
+            f"[({global_batch_number}){current_epoch}-{current_epoch_batch_number}]"
             f" Loss: {kwargs['loss']}")
         if global_batch_number % self.config["tensorboard_log_frequency"] == 0:
             self.summary_writer.add_scalar("train/loss", kwargs['loss'], global_batch_number)
@@ -380,6 +386,7 @@ class ExperimentPipelineUnetPretrained(ExperimentPipeline):
             file_path = os.path.join(self.current_experiment_directory,
             "best_model.ckpt")
             torch.save(model.state_dict(), file_path)
+        self.scheduler.step(metric_to_use_for_model_selection)
         return self.best_metric
 
         

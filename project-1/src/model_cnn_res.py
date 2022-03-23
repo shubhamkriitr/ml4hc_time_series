@@ -10,7 +10,7 @@ import copy
 import logging
 from sklearn.metrics import accuracy_score, f1_score
 from util import get_timestamp_str
-from trainingutil import CnnTrainer
+# from trainingutil import CnnTrainer
 
 logger = logging.getLogger(name=__name__)
 
@@ -170,12 +170,12 @@ class SimpleCnnWithResidualConnection(nn.Module):
     
     def initialize_parameters(self):
         for idx, m in enumerate(self.modules()):
-            print(idx, '->', m)
+            # print(idx, '->', m)
             if isinstance(m, (nn.Conv1d, nn.Linear)):
-                print("ConvLayer or LinearLayer")
+                # print("ConvLayer or LinearLayer")
                 nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
             elif isinstance(m, nn.BatchNorm1d):
-                print("BatchNormLayer")
+                # print("BatchNormLayer")
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
     

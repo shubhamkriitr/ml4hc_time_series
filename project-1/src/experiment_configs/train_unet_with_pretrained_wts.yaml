@@ -2,20 +2,20 @@ pipeline_class: "ExperimentPipelineUnetPretrained"
 experiment_metadata:
   description: "Trying out pretrained encoder and trainable classification \
                head. Pretraining was done in encoder-decoder pipeline."
-  tag: "unet_pretrained"
-dataloader_class_name: "MITBIHDataLoader"
-model_class_name: "CnnPretrainEncoderWithTrainableClassifierHead"
+  tag: "SimpleCnnWithResidualConnection"
+dataloader_class_name: "MITBIHDataLoader" #"BalancedMITBIHDataLoader"
+model_class_name: SimpleCnnWithResidualConnection #"CnnEncoder" #"CnnPretrainEncoderWithTrainableClassifierHead"
 load_from_checkpoint: false
 checkpoint_path: "runs/2022-03-23_192148__unet_ae/best_model.ckpt"
 cost_function_class_name: "CrossEntropyLoss"
 trainer_class_name: "CnnTrainer"
 num_epochs: 50
-batch_size: 32
-learning_rate: 0.001
-weight_decay: 0.00001
+batch_size: 50
+learning_rate: 0.0001
+weight_decay: 0.0000001
 logdir: "runs"
 test_batch_frequency: 500 # evaluate performance metrics on test data
 #after these many batches have been processed
-batch_log_frequency: 200 # Print log after after these many batches
+batch_log_frequency: 1 # Print log after after these many batches
 tensorboard_log_frequency: 100 # Log scalars after these many batches
 test_batch_size: 100

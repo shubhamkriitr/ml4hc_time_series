@@ -254,7 +254,11 @@ class ExperimentPipeline(BaseExperimentPipeline):
 
     def prepare_cost_function(self):
         if self.config["cost_function_class_name"] == "MSELoss":
+            print("Using: MSELoss")
             self.cost_function = nn.MSELoss()
+        elif self.config["cost_function_class_name"] == "CrossEntropyLoss":
+            print("Using: CrossEntropyLoss")
+            self.cost_function == nn.CrossEntropyLoss()
         else:
             raise NotImplementedError()
 
@@ -282,7 +286,10 @@ class ExperimentPipeline(BaseExperimentPipeline):
         file_path = get_timestamp_str()\
             + f"epoch_{current_epoch}_gbatch_{global_batch_number}.ckpt"
         # torch.save(model.state_dict(), file_path)
-        
+        if current_epoch == 0:
+            # save the config
+            self.save_config()
+    
         model.eval()
         n_mc_samples = 1
         with torch.no_grad():
@@ -303,9 +310,13 @@ class ExperimentPipeline(BaseExperimentPipeline):
         return loss
 
     def save_config(self):
-        file_path = os.path.join(self.current_experiment_directory,
-                                 "config.yaml")
-        
+        try:
+            file_path = os.path.join(self.current_experiment_directory,
+                                    "config.yaml")
+            with open(file_path, 'w') as f:
+                yaml.dump(self.config, f)
+        except Exception as exc:
+            print(exc) # TODO: replace all prints with logger         
 
 
 class ExperimentPipelineUnetAE(ExperimentPipeline):

@@ -1,0 +1,21 @@
+pipeline_class: "ExperimentPipelineUnetAE" 
+experiment_metadata:
+  description: "Trying out pretrained encoder and trainable classification \
+               head. Pretraining was done in encoder-decoder pipeline."
+  tag: "unet_pretrained"
+dataloader_class_name: "MITBIHDataLoader"
+model_class_name: "UnetPretrainEncoderWithTrainableClassifierHead"
+load_from_checkpoint: true
+checkpoint_path: "runs/2022-03-23_132933__unet_ae/best_model.ckpt"
+cost_function_class_name: "CrossEntropyLoss"
+trainer_class_name: "CnnTrainer"
+num_epochs: 10
+batch_size: 200
+learning_rate: 0.001
+weight_decay: 0.00001
+logdir: "runs"
+test_batch_frequency: 500 # evaluate performance metrics on test data
+#after these many batches have been processed
+batch_log_frequency: 200 # Print log after after these many batches
+tensorboard_log_frequency: 200 # Log scalars after these many batches
+test_batch_size: 100

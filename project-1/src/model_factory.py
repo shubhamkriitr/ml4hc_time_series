@@ -1,18 +1,18 @@
 from model_cnn_ae import (UnetEncoder, UnetEncoderDecoder,
- UnetPretrainEncoderWithTrainableClassifierHead, CnnEncoderDecoder)
+ CnnPretrainEncoderWithTrainableClassifierHead, CnnEncoderDecoder)
 
 MODEL_UNET_ENCODER = "UnetEncoder"
 MODEL_UNET_ENCODER_DECODER = "UnetEncoderDecoder"
 MODEL_CNN_ENCODER_DECODER = "CnnEncoderDecoder"
 MODEL_UNET_PRETRAINED_ENCODER_NN_CLASSIFIER = \
-    "UnetPretrainEncoderWithTrainableClassifierHead"
+    "CnnPretrainEncoderWithTrainableClassifierHead"
 
 
 MODEL_NAME_TO_CLASS_MAP = {
     MODEL_UNET_ENCODER: UnetEncoder,
     MODEL_UNET_ENCODER_DECODER: UnetEncoderDecoder,
     MODEL_UNET_PRETRAINED_ENCODER_NN_CLASSIFIER:\
-         UnetPretrainEncoderWithTrainableClassifierHead,
+         CnnPretrainEncoderWithTrainableClassifierHead,
     MODEL_CNN_ENCODER_DECODER: CnnEncoderDecoder
 }
 

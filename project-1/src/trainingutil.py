@@ -391,7 +391,7 @@ PIPELINE_NAME_TO_CLASS_MAP = {
 
 
 if __name__ == "__main__":
-    DEFAULT_CONFIG_LOCATION = "experiment_configs/sample.yaml"
+    DEFAULT_CONFIG_LOCATION = "experiment_configs/train_unet_with_pretrained_wts.yaml"
     argparser = ArgumentParser()
     argparser.add_argument("--config", type=str,
                             default=DEFAULT_CONFIG_LOCATION)

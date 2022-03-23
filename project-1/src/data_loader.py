@@ -75,7 +75,8 @@ class DataLoaderUtil:
         x_train = torch.transpose(x_train, 1, 2)
         x_test = torch.transpose(x_test, 1, 2)
 
-        if dataset_name in [DATA_MITBIH_AUTO_ENC, DATA_PTBDB_AUTO_ENC]:
+        if dataset_name in [DATA_MITBIH_AUTO_ENC, DATA_PTBDB_AUTO_ENC,
+        DATA_MITBIH_AUTO_ENC_BAL]:
             # ouput for encoder-decoder 
             y_train = x_train
             y_test = x_test

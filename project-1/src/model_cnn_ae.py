@@ -23,7 +23,8 @@ class UnetEncoder(nn.Module):
             nn.ReLU(),
             nn.Conv1d(in_channels=16, out_channels=16, kernel_size=3, stride=1, padding='same'),
             nn.BatchNorm1d(num_features=16),
-            nn.ReLU()
+            nn.ReLU(),
+            nn.Dropout(p=0.2)
         )
 
         self.pool_0 = nn.MaxPool1d(kernel_size=2, return_indices=True)
@@ -34,18 +35,45 @@ class UnetEncoder(nn.Module):
             nn.ReLU(),
             nn.Conv1d(in_channels=32, out_channels=32, kernel_size=3, stride=1, padding='same'),
             nn.BatchNorm1d(num_features=32),
-            nn.ReLU()
+            nn.ReLU(),
+            nn.Dropout(p=0.2)
         )
 
         self.pool_1 = nn.MaxPool1d(kernel_size=2, return_indices=True)
 
-        self.bottleneck = nn.Sequential(
+        self.block_2 = nn.Sequential(
             nn.Conv1d(in_channels=32, out_channels=64, kernel_size=3, stride=1, padding='same'),
             nn.BatchNorm1d(num_features=64),
             nn.ReLU(),
-            nn.Conv1d(in_channels=64, out_channels=2, kernel_size=3, stride=1, padding='same'),
+            nn.Conv1d(in_channels=64, out_channels=64, kernel_size=3, stride=1, padding='same'),
+            nn.BatchNorm1d(num_features=64),
+            nn.ReLU(),
+            nn.Dropout(p=0.2)
+        )
+
+        self.pool_2 = nn.MaxPool1d(kernel_size=2, return_indices=True)
+
+        self.block_3 = nn.Sequential(
+            nn.Conv1d(in_channels=64, out_channels=256, kernel_size=3, stride=1, padding='same'),
+            nn.BatchNorm1d(num_features=256),
+            nn.ReLU(),
+            nn.Conv1d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding='same'),
+            nn.BatchNorm1d(num_features=256),
+            nn.ReLU(),
+            nn.Dropout(p=0.2)
+        )
+
+        self.pool_3 = nn.MaxPool1d(kernel_size=2, return_indices=True)
+
+
+        self.bottleneck = nn.Sequential(
+            nn.Conv1d(in_channels=256, out_channels=128, kernel_size=3, stride=1, padding='same'),
+            nn.BatchNorm1d(num_features=128),
+            nn.ReLU(),
+            nn.Conv1d(in_channels=128, out_channels=4, kernel_size=3, stride=1, padding='same'),
             # nn.BatchNorm1d(num_features=32),
-            nn.ReLU()
+            nn.ReLU(),
+            nn.Dropout(p=0.2)
         )
 
 
@@ -62,9 +90,18 @@ class UnetEncoder(nn.Module):
 
         output_, pool_indices_1 = self.pool_1(map_1)
 
+        map_2 = self.block_2(output_)
+
+        output_, pool_indices_2 = self.pool_2(map_2)
+
+        map_3 = self.block_3(output_)
+
+        output_, pool_indices_3 = self.pool_3(map_3)
+        
         bottleneck_output = self.bottleneck(output_)
 
-        return [bottleneck_output, map_1, map_0], [pool_indices_1, pool_indices_0]
+        return [bottleneck_output, map_3, map_2, map_1, map_0], \
+            [pool_indices_3, pool_indices_2, pool_indices_1, pool_indices_0]
 
 # Unlike U-Net it does not have skip connections
 class CnnDecoder(nn.Module):
@@ -129,6 +166,21 @@ class UnetDecoder(nn.Module):
         self.expand_bottleneck_channel = nn.Sequential(
             nn.Conv1d(in_channels=1, out_channels=32, kernel_size=3, stride=1, padding='same'),
             nn.BatchNorm1d(num_features=32),
+            nn.ReLU()
+        )
+
+        self.unpool_3 = nn.MaxUnpool1d(kernel_size=2)
+
+        self.block_3 = nn.Sequential(
+            nn.Conv1d(in_channels=64, out_channels=16, kernel_size=3, stride=1, padding='same'),
+            nn.BatchNorm1d(num_features=16),
+            nn.ReLU()
+        )
+        self.unpool_2 = nn.MaxUnpool1d(kernel_size=2)
+
+        self.block_2 = nn.Sequential(
+            nn.Conv1d(in_channels=64, out_channels=16, kernel_size=3, stride=1, padding='same'),
+            nn.BatchNorm1d(num_features=16),
             nn.ReLU()
         )
 
@@ -200,18 +252,18 @@ class CnnEncoderDecoder(nn.Module):
         return output_
 
 
-class UnetPretrainEncoderWithTrainableClassifierHead(nn.Module):
+class CnnPretrainEncoderWithTrainableClassifierHead(nn.Module):
     def __init__(self, config={"num_classes": 5}) -> None:
         super().__init__()
         self.num_classes = config["num_classes"]
         self.encoder = UnetEncoder()
         self.classifier = nn.Sequential(
-            nn.Conv1d(in_channels=2, out_channels=2, kernel_size=2, padding='same'),
-            nn.ReLU(),
-            nn.Conv1d(in_channels=2, out_channels=2, kernel_size=2, padding='same'), 
-            nn.ReLU(),
+            # nn.Conv1d(in_channels=3, out_channels=2, kernel_size=2, padding='same'),
+            # nn.ReLU(),
+            # nn.Conv1d(in_channels=3, out_channels=2, kernel_size=2, padding='same'), 
+            # nn.ReLU(),
             nn.Flatten(), # flatten the feature map
-            nn.Linear(in_features=92, out_features=16),
+            nn.Linear(in_features=44, out_features=16),
             nn.ReLU(),
             nn.Linear(in_features=16, out_features=self.num_classes),
             nn.ReLU()
@@ -234,7 +286,7 @@ class UnetPretrainEncoderWithTrainableClassifierHead(nn.Module):
         # Also freezing the encoder layers:
         for name, param in self.named_parameters():
             if name.startswith("encoder."):
-                param.requires_grad = False
+                param.requires_grad = True #FIXME
             # Also make sure these weights are not passed to the optimizer
 
 def test_load_model_weights(model: nn.Module, weights_path):
@@ -260,7 +312,7 @@ if __name__ == "__main__":
     encoder = UnetEncoder()
     decoder = UnetDecoder()
     unet_enc_dec = UnetEncoderDecoder()
-    unet_enc_classifier = UnetPretrainEncoderWithTrainableClassifierHead()
+    unet_enc_classifier = CnnPretrainEncoderWithTrainableClassifierHead()
 
     weights_path = "runs/2022-03-23_132933__unet_ae/best_model.ckpt"
 

@@ -60,7 +60,61 @@ class UnetEncoder(nn.Module):
 
         return [bottleneck_output, map_1, map_0], [pool_indices_1, pool_indices_0]
 
+# Unlike U-Net it does not have skip connections
+class CnnDecoder(nn.Module):
 
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.expand_bottleneck_channel = nn.Sequential(
+            nn.Conv1d(in_channels=1, out_channels=32, kernel_size=3, stride=1, padding='same'),
+            nn.BatchNorm1d(num_features=32),
+            nn.ReLU()
+        )
+
+        self.unpool_1 = nn.MaxUnpool1d(kernel_size=2)
+
+        self.block_1 = nn.Sequential(
+            nn.Conv1d(in_channels=32, out_channels=16, kernel_size=3, stride=1, padding='same'),
+            nn.BatchNorm1d(num_features=16),
+            nn.ReLU()
+        )
+
+        self.unpool_0 = nn.MaxUnpool1d(kernel_size=2)
+
+        self.block_0 = nn.Sequential(
+            nn.Conv1d(in_channels=16, out_channels=16, kernel_size=3, stride=1, padding='same'),
+            nn.BatchNorm1d(num_features=16),
+            nn.ReLU()
+        )
+
+        self.output_head = nn.Sequential(
+            nn.Conv1d(in_channels=16, out_channels=1, kernel_size=3, stride=1, padding='same'),
+            nn.ReLU()
+        )
+
+
+    
+    def forward(self, encoder_ouputs, pooling_indices):
+        bottleneck_output, enc_1, enc_0 = encoder_ouputs
+        bottleneck_output = self.expand_bottleneck_channel(bottleneck_output)
+        indices_1, indices_0 = pooling_indices
+
+        unpooled_1 = self.unpool_1(bottleneck_output, indices_1,
+                                    output_size=enc_1.shape)
+
+        m = unpooled_1
+
+        m = self.block_1(m)
+
+        unpooled_0 = self.unpool_0(m, indices_0,
+                                    output_size=enc_0.shape)
+
+        m = unpooled_0
+
+        output_ = self.output_head(m)
+
+        return output_
 class UnetDecoder(nn.Module):
 
     def __init__(self) -> None:
@@ -122,6 +176,17 @@ class UnetEncoderDecoder(nn.Module):
         super().__init__()
         self.encoder = UnetEncoder()
         self.decoder = UnetDecoder()
+    
+    def forward(self, x):
+        output_, pooling_indices = self.encoder(x)
+        output_ = self.decoder(output_, pooling_indices)
+        return output_
+
+class CnnEncoderDecoder(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.encoder = UnetEncoder()
+        self.decoder = CnnDecoder()
     
     def forward(self, x):
         output_, pooling_indices = self.encoder(x)

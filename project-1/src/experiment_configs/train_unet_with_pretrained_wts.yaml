@@ -9,7 +9,7 @@ load_from_checkpoint: true
 checkpoint_path: "runs/2022-03-23_132933__unet_ae/best_model.ckpt"
 cost_function_class_name: "CrossEntropyLoss"
 trainer_class_name: "CnnTrainer"
-num_epochs: 10
+num_epochs: 50
 batch_size: 200
 learning_rate: 0.001
 weight_decay: 0.00001

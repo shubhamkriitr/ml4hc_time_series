@@ -1,0 +1,21 @@
+pipeline_class: "ExperimentPipeline" 
+experiment_metadata:
+  description: "Trying out autoencoder to learn features to be used later\
+                for classification."
+  tag: "unet_ae"
+dataloader_class_name: "MITBIHDataLoaderForAutoEncoder"
+model_class_name: "UnetEncoderDecoder"
+load_from_checkpoint: false
+checkpoint_path: ""
+cost_function_class_name: "MSELoss"
+trainer_class_name: "CnnTrainer"
+num_epochs: 5
+batch_size: 100
+learning_rate: 0.001
+weight_decay: 0.00001
+logdir: "runs"
+test_batch_frequency: 100 # evaluate performance metrics on test data
+#after these many batches have been processed
+batch_log_frequency: 5 # Print log after after these many batches
+tensorboard_log_frequency: 1 # Log scalars after these many batches
+test_batch_size: 100

@@ -1,14 +1,17 @@
-import torch
-from torch import nn
-from torch.optim.optimizer import Optimizer
+import os
 import logging
-from sklearn.metrics import accuracy_score, f1_score
-from data_loader import DataLoaderUtil
-from util import get_timestamp_str
-from model_factory import (MODEL_UNET_ENCODER, MODEL_UNET_ENCODER_DECODER,
-                            ModelFactory)
-import yaml
 from argparse import ArgumentParser
+import torch
+import yaml
+from sklearn.metrics import accuracy_score, f1_score
+from torch import nn
+from torch.optim.adam import Adam
+from torch.optim.optimizer import Optimizer
+from torch.utils.tensorboard import SummaryWriter
+
+from data_loader import DataLoaderUtil
+from model_factory import ModelFactory
+from util import get_timestamp_str
 
 logger = logging.getLogger(name=__name__)
 
@@ -27,8 +30,7 @@ class BaseTrainer(object):
         # read from config: TODO
         self.num_epochs = 100
         self.config = config
-        if "num_epochs" in self.config:
-            self.num_epochs = self.config["num_epochs"]
+        self.num_epochs = self.config["num_epochs"]
         self.optimizer = optimizer
 
 
@@ -125,7 +127,7 @@ class BaseExperimentPipeline(object):
         if isinstance(config, str):
             config_data = {}
             with open(config, "r", encoding="utf-8") as f:
-                config_data = yaml.load(f)
+                config_data = yaml.load(f, Loader=yaml.FullLoader)
             return config_data
 
 # dictionary to refer to class by name
@@ -146,44 +148,56 @@ class ExperimentPipeline(BaseExperimentPipeline):
         super().__init__(config)
 
     def prepare_experiment(self):
+        self.prepare_model()
+        self.prepare_optimizer() # call this after model has been initialized
+        self.prepare_cost_function()
+        self.prepare_summary_writer()
+        self.prepare_dataloaders()
+        self.prepare_batch_callbacks()
+        self.prepare_epoch_callbacks()
+
         self.trainer = self.prepare_trainer()
-        self.model = self.prepare_model()
-        self.optimizer = self.prepare_optimizer() # call this after model has been initialized
-        cost_function = self.prepare_cost_function()
-        self.summary_writer = self.prepare_summary_writer()
 
-        train_loader, val_loader, test_loader = self.prepare_dataloaders()
-
-        self.trainer.train(
-            model= self.model,
-            dataloader=train_loader
-
-
-        )
 
     def prepare_dataloaders(self):
-        dataset_class_name = self.config["dataset_class_name"]
+        dataloader_class_name = self.config["dataloader_class_name"]
         train_batch_size = self.config["batch_size"]
 
         train_loader, val_loader, test_loader \
         = DataLoaderUtil().get_data_loaders(
-        dataset_class_name,
+        dataloader_class_name,
         train_batch_size=train_batch_size, 
         val_batch_size=1,
         test_batch_size=self.config["test_batch_size"], 
         train_shuffle=True, val_split=0.0)
 
+        self.train_loader = train_loader
+        self.val_loader = val_loader
+        self.test_loader = test_loader
         return train_loader, val_loader, test_loader
 
     def prepare_trainer(self):
-        trainer = TrainerFactory().get(
+        trainer_class = TrainerFactory().get(
             self.config["trainer_class_name"])
         
+        trainer = trainer_class(model=self.model,
+                    dataloader=self.train_loader,
+                    cost_function=self.cost_function,
+                    optimizer=self.optimizer,
+                    batch_callbacks=self.batch_callbacks,
+                    epoch_callbacks=self.epoch_callbacks,
+                    config={
+                        "num_epochs": self.config["num_epochs"]
+                        }
+                    )
+
+        self.trainer = trainer
         return trainer
     
 
     def prepare_model(self):
-        model = ModelFactory().get(self.config["model_class_name"])
+        # TODO: use model config too (or make it work by creating new class)
+        model = ModelFactory().get(self.config["model_class_name"])()
 
         if self.config["load_from_checkpoint"]:
             checkpoint_path = self.config["checkpoint_path"]
@@ -192,25 +206,81 @@ class ExperimentPipeline(BaseExperimentPipeline):
             logger.info(str(self.model))
             logger.info(f"Model Loaded")
         
+        self.model = model
         return model
     
     def prepare_optimizer(self):
-        pass
+        lr = self.config["learning_rate"]
+        weight_decay = self.config["weight_decay"]
+        self.optimizer = Adam(
+            lr=lr, weight_decay=weight_decay,
+            params=self.model.parameters()
+            )
 
     def prepare_summary_writer(self):
-        pass
+        experiment_tag = self.config["experiment_metadata"]["tag"]
+        timestamp = get_timestamp_str()
+        self.current_experiment_directory = os.path.join(
+            self.config["logdir"],timestamp+"_"+experiment_tag)
+
+        os.makedirs(self.current_experiment_directory, exist_ok=True)
+        self.current_experiment_log_directory = os.path.join(
+            self.current_experiment_directory, "logs"
+        )
+        os.makedirs(self.current_experiment_log_directory, exist_ok=True)
+        
+        self.summary_writer = SummaryWriter(
+            log_dir=self.current_experiment_log_directory)
 
     def prepare_cost_function(self):
-        pass
+        if self.config["cost_function_class_name"] == "MSELoss":
+            self.cost_function = nn.MSELoss()
+        else:
+            raise NotImplementedError()
 
     def prepare_batch_callbacks(self):
-        pass
+        self.batch_callbacks = [self.batch_callback]
 
     def prepare_epoch_callbacks(self):
-        pass
+        self.epoch_callbacks = [self.epoch_callback]
 
     def run_experiment(self):
-        return super().run_experiment()
+        self.trainer.train()
+    
+    def batch_callback(self, model, batch_data, global_batch_number,
+                    current_epoch, current_epoch_batch_number, **kwargs):
+        
+        if global_batch_number % self.config["batch_log_frequency"] == 0:
+            print(
+            f"[{current_epoch}/{current_epoch_batch_number}]"
+            f" Loss: {kwargs['loss']}")
+        if global_batch_number % self.config["tensorboard_log_frequency"] == 0:
+            self.summary_writer.add_scalar("train/loss", kwargs['loss'])
+    
+    def epoch_callback(self, model: nn.Module, batch_data, global_batch_number,
+                    current_epoch, current_epoch_batch_number, **kwargs):
+        file_path = get_timestamp_str()\
+            + f"epoch_{current_epoch}_gbatch_{global_batch_number}.ckpt"
+        # torch.save(model.state_dict(), file_path)
+        
+        model.eval()
+        n_mc_samples = 1
+        with torch.no_grad():
+            
+            x = self.test_loader.dataset.x
+            y_true = self.test_loader.dataset.y
+
+            y_pred_prob = model(x)/n_mc_samples
+            for nmc in range(n_mc_samples -1):
+                y_pred_prob = y_pred_prob + model(x)/n_mc_samples
+            y_pred = y_pred_prob
+            
+            loss = self.cost_function(input=y_pred, target=y_true)
+
+            print(f"Test loss: {loss}")
+            self.summary_writer.add_scalar("test/loss", loss)
+
+
             
 
         
@@ -220,5 +290,17 @@ class ExperimentPipeline(BaseExperimentPipeline):
 if __name__ == "__main__":
     DEFAULT_CONFIG_LOCATION = "experiment_configs/sample.yaml"
     argparser = ArgumentParser()
-    argparser.add_argument("--config", type="str",
+    argparser.add_argument("--config", type=str,
                             default=DEFAULT_CONFIG_LOCATION)
+    args = argparser.parse_args()
+    
+    config_data = None
+    with open(args.config, 'r', encoding="utf-8") as f:
+        config_data = yaml.load(f, Loader=yaml.FullLoader)
+    
+    if config_data["pipeline_class"] == "ExperimentPipeline":
+        pipeline = ExperimentPipeline(config=config_data)
+        pipeline.prepare_experiment()
+        pipeline.run_experiment()
+
+

@@ -10,7 +10,6 @@ import copy
 import logging
 from sklearn.metrics import accuracy_score, f1_score
 from util import get_timestamp_str
-from trainingutil import CnnTrainer
 
 
 
@@ -119,8 +118,8 @@ class UnetEncoderDecoder(nn.Module):
         self.decoder = UnetDecoder()
     
     def forward(self, x):
-        output_ = self.encoder(x)
-        output_ = self.decoder(output_)
+        output_, pooling_indices = self.encoder(x)
+        output_ = self.decoder(output_, pooling_indices)
         return output_
 
 

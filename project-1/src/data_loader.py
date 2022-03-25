@@ -63,7 +63,10 @@ class DataLoaderUtil:
         data = torch.cat([x, torch.unsqueeze(y, dim=1).unsqueeze(dim=2)], dim=2)
         train_data, val_data = train_test_split(data, test_size=val_ratio, random_state=1337, stratify=data[:, :, -1]) # last col of last dim
         
-        return train_data[:, :, 0:-1], train_data[:, 0, -1], val_data[:, :, 0:-1], val_data[:, 0, -1] 
+        return (train_data[:, :, 0:-1].type(self.x_data_type),
+         train_data[:, 0, -1].type(self.y_data_type),
+          val_data[:, :, 0:-1].type(self.x_data_type),
+           val_data[:, 0, -1].type(self.y_data_type) )
 
     @staticmethod
     def sanity_check(x_orig, y_orig, x_chunk, y_chunk):

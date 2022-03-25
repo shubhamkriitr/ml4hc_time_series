@@ -171,7 +171,7 @@ class ExperimentPipeline(BaseExperimentPipeline):
         train_batch_size=train_batch_size, 
         val_batch_size=1,
         test_batch_size=self.config["test_batch_size"], 
-        train_shuffle=True, val_split=0.0)
+        train_shuffle=True, val_split=self.config["val_split"])
 
         self.train_loader = train_loader
         self.val_loader = val_loader
@@ -366,27 +366,16 @@ class ExperimentPipelineUnetPretrained(ExperimentPipeline):
                 self.summary_writer.add_graph(self.model, batch_data[0])
     
         model.eval()
+        # 
+
         with torch.no_grad():
-            x = self.test_loader.dataset.x
-            y_true = self.test_loader.dataset.y
-            y_pred_prob = model(x)
-            y_pred = torch.argmax(y_pred_prob, axis=1)
-            f1 = f1_score(y_true, y_pred, average="macro")
-
-            print("Test f1 score : %s "% f1)
-
-            acc = accuracy_score(y_true, y_pred)
-            
-            loss = self.cost_function(input=y_pred_prob, target=y_true)
-            print(f"Test acc: {acc}")
-            print(f"Test loss: {loss}")
-            self.summary_writer.add_scalar("test/loss", loss, current_epoch)
-            self.summary_writer.add_scalar("test/F1", f1, current_epoch)
-            self.summary_writer.add_scalar("test/Accuracy", acc, current_epoch)
-            self.summary_writer.flush()
+            val_f1, _, _ = self.compute_and_log_evaluation_metrics(
+                model, current_epoch, "val")
+            test_f1, _, _ = self.compute_and_log_evaluation_metrics(
+                model, current_epoch, "test")
         
-        metric_to_use_for_model_selection = f1 # TODO: can be pulled in config
-        metric_name = "F1-Score"
+        metric_to_use_for_model_selection = val_f1 # TODO: can be pulled in config
+        metric_name = "Validation F1-Score"
         if self.best_metric is None or \
              (self.best_metric < metric_to_use_for_model_selection):
             print(f"Saving model: {metric_name} changed from {self.best_metric}"
@@ -402,6 +391,31 @@ class ExperimentPipelineUnetPretrained(ExperimentPipeline):
              current_epoch)
         return self.best_metric
 
+    def compute_and_log_evaluation_metrics(self, model, current_epoch,
+        eval_type):
+        if eval_type == "test":
+            x = self.test_loader.dataset.x
+            y_true = self.test_loader.dataset.y
+        if eval_type == "val":
+            x = self.val_loader.dataset.x
+            y_true = self.val_loader.dataset.y
+        y_pred_prob = model(x)
+        y_pred = torch.argmax(y_pred_prob, axis=1)
+        f1 = f1_score(y_true, y_pred, average="macro")
+
+        print("%s f1 score : %s "% (eval_type, f1))
+
+        acc = accuracy_score(y_true, y_pred)
+            
+        loss = self.cost_function(input=y_pred_prob, target=y_true)
+        print(f"{eval_type} acc: {acc}")
+        print(f"{eval_type} loss: {loss}")
+        self.summary_writer.add_scalar(f"{eval_type}/loss", loss, current_epoch)
+        self.summary_writer.add_scalar(f"{eval_type}/F1", f1, current_epoch)
+        self.summary_writer.add_scalar(f"{eval_type}/Accuracy", acc, current_epoch)
+        self.summary_writer.flush()
+        return f1, acc, loss
+
         
 PIPELINE_NAME_TO_CLASS_MAP = {
     "ExperimentPipeline": ExperimentPipeline,
@@ -411,7 +425,7 @@ PIPELINE_NAME_TO_CLASS_MAP = {
 
 
 if __name__ == "__main__":
-    DEFAULT_CONFIG_LOCATION = "experiment_configs/train_unet_with_pretrained_wts.yaml"
+    DEFAULT_CONFIG_LOCATION = "experiment_configs/experiment_1_a_cnn_with_residual_block.yaml"
     argparser = ArgumentParser()
     argparser.add_argument("--config", type=str,
                             default=DEFAULT_CONFIG_LOCATION)

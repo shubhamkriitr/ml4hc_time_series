@@ -347,6 +347,13 @@ class CnnPretrainEncoderWithTrainableClassifierHead(nn.Module):
                 param.requires_grad = True #FIXME
             # Also make sure these weights are not passed to the optimizer
 
+
+class CnnPretrainEncoderWithTrainableClassifierHeadPTB(
+    CnnPretrainEncoderWithTrainableClassifierHead
+):
+    def __init__(self, config={ "num_classes": 2 }) -> None:
+        super().__init__(config)
+
 def test_load_model_weights(model: nn.Module, weights_path):
     model_state_dict = torch.load(weights_path)
     model.load_state_dict(state_dict=model_state_dict)

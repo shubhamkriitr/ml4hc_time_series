@@ -20,6 +20,7 @@ class CnnWithResidualConnection(nn.Module):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__()
+        self.num_classes = 5
 
         self.expand_channel = nn.Sequential(
             nn.Conv1d(in_channels=1, out_channels=16, kernel_size=5, stride=1, padding=2),
@@ -118,7 +119,7 @@ class CnnWithResidualConnection(nn.Module):
         self.fc_block = nn.Sequential(
             nn.Linear(in_features=64, out_features=64),
             nn.ReLU(),
-            nn.Linear(in_features=64, out_features=5),
+            nn.Linear(in_features=64, out_features=self.num_classes),
             nn.ReLU()
         )
         self.softmax = nn.Softmax(dim=1)
@@ -472,7 +473,10 @@ class CnnWithResidualBlocksPTB(CnnWithResidualBlocks):
         self.config["num_classes"] = 2 # change the number of classes for PTB
         # keeo rest of the architecture same as CnnWithResidualBlocks
         
-
+class CnnWithResidualConnectionPTB(CnnWithResidualConnection):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.num_classes = 2 # Binary classification for PTB dataset
 
 
 

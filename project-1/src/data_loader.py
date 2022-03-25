@@ -28,7 +28,7 @@ DATA_PTBDB_AUTO_ENC = "PTBDataLoaderForAutoEncoder"
 MAX_SIZE_IN_BALANCED_DATASET = 3000 # max num of samples
 
 
-class ClassificationDataset(Dataset):
+class TaskDataset(Dataset):
     def __init__(self, x, y):
         self.x = x
         self.y = y
@@ -39,10 +39,10 @@ class ClassificationDataset(Dataset):
     def __getitem__(self, index):
         return self.x[index], self.y[index]
 
-# It is functionally same as CLassificationDataset
+# It is functionally same as TaskDataset
 # but creating this class anyways for readability.
 # Note: y will be same as x in this case
-class AutoEncoderDataset(ClassificationDataset):
+class AutoEncoderDataset(TaskDataset):
     def __init__(self, x, y):
         super().__init__(x, y)
 
@@ -129,14 +129,14 @@ class DataLoaderUtil:
                 x_train, y_train, val_split
             )
             
-            val_dataset = ClassificationDataset(x_val, y_val)
+            val_dataset = TaskDataset(x_val, y_val)
             print("Validation:")
             self.print_class_percentages(y_val)
 
             
         #train
-        train_dataset = ClassificationDataset(x_train, y_train)
-        test_dataset = ClassificationDataset(x_test, y_test)
+        train_dataset = TaskDataset(x_train, y_train)
+        test_dataset = TaskDataset(x_test, y_test)
         
         print("Training:")
         self.print_class_percentages(y_train)

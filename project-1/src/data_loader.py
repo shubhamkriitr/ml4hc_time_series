@@ -4,12 +4,16 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from pathlib import Path
 from torch.utils.data import DataLoader, Dataset
+from util import PROJECTPATH
 import torch
 
-DATASET_LOC_MITBIH_TRAIN = "../input/mitbih_train.csv"
-DATASET_LOC_MITBIH_TEST = "../input/mitbih_test.csv"
-DATASET_LOC_PTBDB_NORMAL = "../input/ptbdb_normal.csv"
-DATASET_LOC_PTBDB_ABNORMAL = "../input/ptbdb_abnormal.csv"
+MITBIH = "mitbih"
+PTBDB = "ptbdb"
+
+DATASET_LOC_MITBIH_TRAIN = str(Path(PROJECTPATH)/"input/mitbih_train.csv")
+DATASET_LOC_MITBIH_TEST = str(Path(PROJECTPATH)/"input/mitbih_test.csv")
+DATASET_LOC_PTBDB_NORMAL = str(Path(PROJECTPATH)/"input/ptbdb_normal.csv")
+DATASET_LOC_PTBDB_ABNORMAL = str(Path(PROJECTPATH)/"input/ptbdb_abnormal.csv")
 
 # these class names are used in config and in DataLoaderUtil
 # to refer the the two datsets for different tasks
@@ -120,7 +124,7 @@ class MITBIHDataLoader:
 
     def load_data(self):
         """
-        Assumes data is in resources/input
+        Assumes data is in input/
         Returns:
         X:      np array (87554, 187, 1)
         Y:      np array (87554,)
@@ -171,7 +175,7 @@ class PTBDataLoader:
 
     def load_data(self):
         """
-        Assumes data is in resources/input
+        Assumes data is in input/
         Returns:
         X:      np array (11641, 187, 1)
         Y:      np array (11641,)

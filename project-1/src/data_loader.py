@@ -27,6 +27,46 @@ DATA_PTBDB_AUTO_ENC = "PTBDataLoaderForAutoEncoder"
 
 MAX_SIZE_IN_BALANCED_DATASET = 3000 # max num of samples
 
+
+
+def get_parition_indices(y, val_split_ratio):
+    """
+    Returns train and validation partition indices
+    such that the number of classes in both the dataset
+    have the same proportion.
+    """
+    classes, frequencies = torch.unique(y, return_counts=True)
+    train_indices_for_each_class = []
+    val_indices_for_each_class = []
+    
+    for idx, class_id in enumerate(classes):
+        class_freq = frequencies[idx]
+        class_indices = torch.where(y==class_id)[0]
+        
+        val_freq = int(val_split_ratio*class_freq)
+        
+        assert class_indices.shape[0] == class_freq
+        shuffled_index_selector = torch.randperm(class_freq)
+        
+        # choose first `val_freq` number of indices where the label is `class_id`
+        current_val_indices = class_indices[shuffled_index_selector[0:val_freq]]
+        # now choose the rest for training
+        current_train_indices = class_indices[shuffled_index_selector[val_freq:]]
+        
+        train_indices_for_each_class.append(current_train_indices)
+        val_indices_for_each_class.append(current_val_indices)
+    
+    train_indices = torch.cat(train_indices_for_each_class, dim=0)
+    val_indices = torch.cat(val_indices_for_each_class, dim=0)
+    
+    return (train_indices, val_indices) # return partition indices as tuple
+
+def print_class_percentages(y):
+    classes, frequencies = torch.unique(y, return_counts=True)
+    percentages = 100*frequencies/torch.sum(frequencies)
+    print(classes, frequencies)
+    print(percentages)
+
 class ClassificationDataset(Dataset):
     def __init__(self, x, y):
         self.x = x
@@ -37,6 +77,13 @@ class ClassificationDataset(Dataset):
     
     def __getitem__(self, index):
         return self.x[index], self.y[index]
+
+# It is functionally same as CLassificationDataset
+# but creating this class anyways for readability.
+# Note: y will be same as x in this case
+class AutoEncoderDataset(ClassificationDataset):
+    def __init__(self, x, y):
+        super().__init__(x, y)
 
 
 class DataLoaderUtil:
@@ -87,18 +134,34 @@ class DataLoaderUtil:
 
         return x_train, y_train, x_test, y_test
     
-    def get_datasets_split(self, dataset_name, val_split=0.1):
+    def get_datasets_split(self, dataset_name, val_split=None, partition_indices=None):
         x_train, y_train, x_test, y_test = self.load_data(dataset_name)
+        train_indices, val_indices = None, None
+        val_dataset = None # TODO: add validation splitting
 
+        if val_split is None:
+            return
+        if isinstance(val_split, bool):
+            if partition_indices is None:
+                # loading partition indices
+                pass
+
+            # train_indices, val_indices = partition_indices
+        else:
+            assert isinstance(val_split, float)
+            shuffled_indices = torch.randperm(5)
+            train_indices = 1
+
+            
         #train
         train_dataset = ClassificationDataset(x_train, y_train)
         test_dataset = ClassificationDataset(x_test, y_test)
-        val_dataset = None # TODO: add validation splitting
 
         return train_dataset, val_dataset, test_dataset
     
     def get_data_loaders(self,  dataset_name, train_batch_size=8, 
-        val_batch_size=8, test_batch_size=8, train_shuffle=True, val_split=0.1):
+        val_batch_size=8, test_batch_size=8, train_shuffle=True, val_split=0.1,
+        partition_indices=None):
         train_dataset, val_dataset, test_dataset = self.get_datasets_split(
             dataset_name, val_split
         )

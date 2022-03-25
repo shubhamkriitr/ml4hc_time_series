@@ -16,7 +16,7 @@ logger = logging.getLogger(name=__name__)
 MODEL_CNN_RES = "CNN with Residual Blocks"
 
 
-class SimpleCnnWithResidualConnection(nn.Module):
+class CnnWithResidualConnection(nn.Module):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__()

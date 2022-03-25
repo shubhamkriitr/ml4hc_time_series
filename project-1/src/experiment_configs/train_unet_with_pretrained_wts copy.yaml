@@ -3,11 +3,11 @@ experiment_metadata:
   description: "(NO LR scheduling)Checking how many epochs it take to get F1>=90.(\
                 Trying out pretrained encoder and trainable classification \
                head. Pretraining was done in encoder-decoder pipeline.)"
-  tag: "SimpleCnnWithResidualConnection"
+  tag: "CnnWithResidualConnection"
 dataloader_class_name: "MITBIHDataLoader" #"BalancedMITBIHDataLoader"
-model_class_name: SimpleCnnWithResidualConnection #"CnnEncoder" #"CnnPretrainEncoderWithTrainableClassifierHead"
+model_class_name: CnnWithResidualConnection #"CnnEncoder" #"CnnPretrainEncoderWithTrainableClassifierHead"
 load_from_checkpoint: true
-checkpoint_path: "runs/2022-03-24_113657__SimpleCnnWithResidualConnection/best_model.ckpt"
+checkpoint_path: "runs/2022-03-24_113657__CnnWithResidualConnection/best_model.ckpt"
 cost_function_class_name: "CrossEntropyLoss"
 trainer_class_name: "CnnTrainer"
 num_epochs: 70

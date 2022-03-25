@@ -62,7 +62,7 @@ if __name__ == "__main__":
     from sklearn.metrics import f1_score, accuracy_score
 
     model_fac = ModelFactory()
-    model_names = ["SimpleCnnWithResidualConnection", "CnnEncoder"]
+    model_names = ["CnnWithResidualConnection", "CnnEncoder"]
     # list of model loaders :
     # getting class from factory and creating an instance
     lazy_models = [lambda : model_fac.get(name)() for name in model_names]
@@ -82,9 +82,9 @@ if __name__ == "__main__":
             break
 
     def load_model():
-        path_ = "runs/2022-03-23_225626__SimpleCnnWithResidualConnection/best_model.ckpt"
+        path_ = "runs/2022-03-23_225626__CnnWithResidualConnection/best_model.ckpt"
         model_weights = torch.load(path_)
-        model = model_fac.get("SimpleCnnWithResidualConnection")()
+        model = model_fac.get("CnnWithResidualConnection")()
         model.load_state_dict(model_weights)
         return model
     lazy_models = [load_model, load_model]

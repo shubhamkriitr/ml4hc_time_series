@@ -10,7 +10,6 @@ import copy
 import logging
 from sklearn.metrics import accuracy_score, f1_score
 from util import get_timestamp_str
-# from trainingutil import CnnTrainer
 
 logger = logging.getLogger(name=__name__)
 
@@ -474,71 +473,6 @@ class CnnWithResidualBlocksPTB(CnnWithResidualBlocks):
         # keeo rest of the architecture same as CnnWithResidualBlocks
         
 
-def do_sample_training():
-    # class_frequencies = torch.tensor([72471,  2223,  5788,   641,  6431], dtype=torch.float32)
-    # class_weights = torch.max(class_frequencies)/(class_frequencies)
-    # cost_function = nn.CrossEntropyLoss(weight=class_weights, reduction='mean') #
-    cost_function = nn.CrossEntropyLoss( ) #
-    dataloader_util = DataLoaderUtil()
-
-    dataset_name = DATA_MITBIH  # DATA_PTBDB # or DATA_MITBIH
-    model_class = SimpleCnnWithResidualConnection #CnnWithResidualBlocksPTB # or CnnWithResidualBlocks
-
-    train_loader, val_loader, test_loader \
-        = dataloader_util.get_data_loaders(dataset_name, train_batch_size=200, 
-        val_batch_size=1, test_batch_size=100, train_shuffle=False,
-        val_split=0.1)
-    model = model_class(config=None) # using default model config
-    opti = Adam(lr=1e-3, params=model.parameters(), weight_decay=1e-6)
-
-    def batch_callback(model, batch_data, global_batch_number,
-                    current_epoch, current_epoch_batch_number, **kwargs):
-        print(
-            f"[{current_epoch}/{current_epoch_batch_number}]"
-            f" Loss: {kwargs['loss']}")
-    
-    def save_model_callback(model: nn.Module, batch_data, global_batch_number,
-                    current_epoch, current_epoch_batch_number, **kwargs):
-        file_path = get_timestamp_str()\
-            + f"epoch_{current_epoch}_gbatch_{global_batch_number}.ckpt"
-        # torch.save(model.state_dict(), file_path)
-        
-        model.eval()
-
-        num_batches = 0
-        acc_sum = 0
-
-        n_mc_samples = 1
-        with torch.no_grad():
-            for i in [1]: #x, y_true in train_loader:
-                x = test_loader.dataset.x
-                y_true = test_loader.dataset.y
-
-                y_pred_prob = model(x)/n_mc_samples
-                for nmc in range(n_mc_samples -1):
-                    y_pred_prob = y_pred_prob + model(x)/n_mc_samples
-                y_pred = torch.argmax(y_pred_prob, axis=1)
-                f1 = f1_score(y_true, y_pred, average="macro")
-
-                print("Test f1 score : %s "% f1)
-
-                acc = accuracy_score(y_true, y_pred)
-
-                print("Test accuracy score : %s "% acc)
-                num_batches += 1
-                acc_sum += acc
-        # print(f"Average Accuracy :  {acc_sum/num_batches}")
-        
-
-    trainer = CnnTrainer(model=model, dataloader=train_loader,
-                cost_function=cost_function, optimizer=opti,
-                 batch_callbacks=[batch_callback], 
-                 epoch_callbacks=[save_model_callback])
-    
-    
-
-    trainer.train()
-
 
 
 
@@ -554,5 +488,3 @@ if __name__ == "__main__":
                      paddings, shortcut_connection_flags, True)
 
     print(res_block)
-
-    do_sample_training()

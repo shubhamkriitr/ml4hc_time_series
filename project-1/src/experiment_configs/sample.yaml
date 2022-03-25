@@ -19,3 +19,4 @@ test_batch_frequency: 1000 # evaluate performance metrics on test data
 batch_log_frequency: 1000 # Print log after after these many batches
 tensorboard_log_frequency: 1000 # Log scalars after these many batches
 test_batch_size: 100
+scheduler: "ReduceLROnPlateau"

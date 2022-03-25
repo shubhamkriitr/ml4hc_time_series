@@ -1,15 +1,16 @@
 pipeline_class: "ExperimentPipelineUnetPretrained" 
 experiment_metadata:
-  description: "Trying out pretrained encoder and trainable classification \
-               head. Pretraining was done in encoder-decoder pipeline."
+  description: "(NO LR scheduling)Checking how many epochs it take to get F1>=90.(\
+                Trying out pretrained encoder and trainable classification \
+               head. Pretraining was done in encoder-decoder pipeline.)"
   tag: "SimpleCnnWithResidualConnection"
 dataloader_class_name: "MITBIHDataLoader" #"BalancedMITBIHDataLoader"
 model_class_name: SimpleCnnWithResidualConnection #"CnnEncoder" #"CnnPretrainEncoderWithTrainableClassifierHead"
 load_from_checkpoint: true
-checkpoint_path: "runs/2022-03-23_234948__SimpleCnnWithResidualConnection/best_model.ckpt"
+checkpoint_path: "runs/2022-03-24_113657__SimpleCnnWithResidualConnection/best_model.ckpt"
 cost_function_class_name: "CrossEntropyLoss"
 trainer_class_name: "CnnTrainer"
-num_epochs: 50
+num_epochs: 70
 batch_size: 200
 learning_rate: 0.001
 weight_decay: 0.0000001

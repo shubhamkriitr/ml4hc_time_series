@@ -151,6 +151,7 @@ class ExperimentPipeline(BaseExperimentPipeline):
     def prepare_experiment(self):
         self.prepare_model()
         self.prepare_optimizer() # call this after model has been initialized
+        self.prepare_scheduler()
         self.prepare_cost_function()
         self.prepare_summary_writer()
         self.prepare_dataloaders()
@@ -224,7 +225,15 @@ class ExperimentPipeline(BaseExperimentPipeline):
             )
     
     def prepare_scheduler(self):
-        self.scheduler = ReduceLROnPlateau(self.optimizer, 'min')
+        if "scheduler" not in self.config:
+            return
+        scheduler_name = self.config["scheduler"]
+        if scheduler_name is None:
+            return
+        if scheduler_name == "ReduceLROnPlateau":
+            self.scheduler = ReduceLROnPlateau(self.optimizer, 'min')
+        else:
+            raise NotImplementedError()
         
     
     def filter_trainer_parameters(self):
@@ -386,7 +395,11 @@ class ExperimentPipelineUnetPretrained(ExperimentPipeline):
             file_path = os.path.join(self.current_experiment_directory,
             "best_model.ckpt")
             torch.save(model.state_dict(), file_path)
-        self.scheduler.step(metric_to_use_for_model_selection)
+        if hasattr(self, "scheduler"):
+            self.scheduler.step(metric_to_use_for_model_selection)
+            next_lr = [group['lr'] for group in self.optimizer.param_groups][0]
+            self.summary_writer.add_scalar("lr", next_lr,
+             current_epoch)
         return self.best_metric
 
         

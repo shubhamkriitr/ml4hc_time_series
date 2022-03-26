@@ -3,33 +3,105 @@ import torch
 import torch.functional as F
 
 
-class RnnModelPTB (nn.Module):
-    def __init__(self, config={"num_classes": 1}) -> None:
+class RnnModelMITBIH (nn.Module):
+    def __init__(self, config={"num_classes": 5}) -> None:
         super().__init__()
         # TODO: layer definition
         self.num_classes = config["num_classes"]
-        self.linear = nn.Linear(in_features=187, out_features=self.num_classes)
-        self.flatten = nn.Flatten()
-        self.classification_activation_layer = nn.Sigmoid()
+
+        #network level hyper parameters 
+        self.dropout = 0.0
+        self.bidirectional = False
+
+        # each of the vector passed to the RNN would have this many number
+        # of elements
+        self.input_feature_chunk_size = 2
+        self.input_original_feature_size = 5  # FIXME
+
+        self.classification_activation_layer = nn.Softmax(dim=1)
+
+        self._compute_and_initialize_sequence_length_and_padding()
+        self._build_network()
+
+    def _compute_and_initialize_sequence_length_and_padding(self):
+        remainder \
+            = self.input_original_feature_size % self.input_feature_chunk_size
+        padding = 0
+        sequence_length \
+            = self.input_original_feature_size // self.input_feature_chunk_size
+        if remainder > 0:
+            sequence_length += 1
+            padding = self.input_feature_chunk_size - remainder
+        
+        self.sequence_length = sequence_length
+        self.padding = padding
+
+
+    def _build_network(self):
+        """Create the network layers.
+        Also override this function in child classes to change network
+        level configurations before the netwok is built.
+        """
+        self.rnn_block_1 = None
+
+    def adjust_input(self, x):
+        out_ = torch.transpose(x, 1, 2) # bring temporal dim 
+        # to 2nd position (i.e. 1st index). e.g. B x 187 x 1
+
+        if self.padding != 0:
+            size_ = list(out_.shape)
+            size_[1] = self.padding
+            zero_pad = torch.zeros(size=size_, dtype=out_.dtype)
+            out_ = torch.cat([out_, zero_pad], dim=1)
+
+        if self.input_feature_chunk_size != 1:
+            new_shape = (out_.shape[0],
+             self.sequence_length,
+             self.input_feature_chunk_size)
+
+            out_ = out_.reshape(new_shape)
+        
+        return out_
+
+        
     
     def forward(self, x):
         # TODO: layer application
-        out_ = self.flatten(x)
-        out_ = self.linear(out_)
+        
+        # format ouput corerctly to feed it to the network
+        out_ = self.adjust_input(x)
+        
+        # Apply RNN layers
+
+
 
         # shape should be (batch, num_classes)
         out_ = self.classification_activation_layer(out_)
-        # Shape should be (batch,)
-        return self.reshape_output(out_)
-    
-    def reshape_output(self, out_):
-        return out_.squeeze()
 
-class RnnModelMITBIH(RnnModelPTB):
-    def __init__(self, config={ "num_classes": 5 }) -> None:
-        super().__init__(config)
-        self.classification_activation_layer = nn.Softmax(dim=1)
+        # Shape should be (batch,) for binary classification case
+        # and (batch, num_classes) otherwise
+        return self.reshape_output(out_)
     
     def reshape_output(self, out_):
         # shape does not need to changed for this
         return out_
+    
+    
+
+class RnnModelPTB(RnnModelMITBIH):
+    def __init__(self, config={ "num_classes": 1 }) -> None:
+        super().__init__(config)
+    
+    def _build_network(self):
+        self.classification_activation_layer = nn.Sigmoid()
+        super()._build_network()
+    
+    def reshape_output(self, out_):
+        return out_.squeeze()
+
+if __name__ == "__main__":
+    n_batch = 3
+    n_feat = 5
+    x = torch.arange(n_batch*n_feat).reshape(n_batch,1,n_feat).type(torch.float32)
+    net = RnnModelMITBIH()
+    y = net(x)

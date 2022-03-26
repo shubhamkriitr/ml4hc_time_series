@@ -10,7 +10,7 @@ checkpoint_path: ""
 cost_function_class_name: "BCELoss"
 trainer_class_name: "CnnTrainer"
 num_epochs: 50
-batch_size: 200
+batch_size: 100
 learning_rate: 0.001
 weight_decay: 0.0000001
 logdir: "runs"
@@ -19,5 +19,5 @@ test_batch_frequency: 500 # evaluate performance metrics on test data
 batch_log_frequency: 1 # Print log after after these many batches
 tensorboard_log_frequency: 100 # Log scalars after these many batches
 test_batch_size: 100
-scheduler: "ReduceLROnPlateau"
+scheduler: 
 task_type: "binary_classification"

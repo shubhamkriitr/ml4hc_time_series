@@ -6,7 +6,8 @@ from sklearn.metrics import auc
 from matplotlib import pyplot
 import os
 
-def plot_auroc(y_test,y_predictions, figure_save_location_prefix=None):
+def plot_auroc(y_test,y_predictions, figure_save_location_prefix=None, 
+        plot_tag=""):
     # num_thresholds when discretizing under the curve
     # curve = 'ROC' OR 'PR'
     false_pos , true_pos , thresholds = roc_curve (y_test,y_predictions)
@@ -18,7 +19,7 @@ def plot_auroc(y_test,y_predictions, figure_save_location_prefix=None):
     plt.plot(false_pos, true_pos, label='(area = {:.3f})'.format(auc_keras))
     plt.xlabel('False positive rate')
     plt.ylabel('True positive rate')
-    plt.title('ROC curve')
+    plt.title(f'ROC curve {plot_tag}')
     plt.legend(loc='best')
     if figure_save_location_prefix is None:
         plt.show()
@@ -36,6 +37,7 @@ def plot_auroc(y_test,y_predictions, figure_save_location_prefix=None):
     # axis labels
     pyplot.xlabel('Recall')
     pyplot.ylabel('Precision')
+    plt.title(f"ROC {plot_tag}")
     # show the legend
     pyplot.legend()
 

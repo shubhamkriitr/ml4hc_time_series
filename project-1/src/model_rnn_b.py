@@ -15,10 +15,9 @@ class RnnModelMITBIH (nn.Module):
 
         # each of the vector passed to the RNN would have this many number
         # of elements
-        self.input_feature_chunk_size = 2
-        self.input_original_feature_size = 5  # FIXME
+        self.input_feature_chunk_size = 21
+        self.input_original_feature_size = 187
 
-        self.classification_activation_layer = nn.Softmax(dim=1)
 
         self._compute_and_initialize_sequence_length_and_padding()
         self._build_network()
@@ -42,7 +41,64 @@ class RnnModelMITBIH (nn.Module):
         Also override this function in child classes to change network
         level configurations before the netwok is built.
         """
-        self.rnn_block_1 = None
+        self.rnn_block_0 = nn.RNN(
+            input_size=self.input_feature_chunk_size,
+            hidden_size=32,
+            num_layers=3,
+            nonlinearity='relu',
+            dropout=self.dropout,
+            bidirectional=self.bidirectional,
+            batch_first=True
+        )
+
+        self.rnn_block_1 = nn.RNN(
+            input_size=32,
+            hidden_size=16,
+            num_layers=3,
+            nonlinearity='relu',
+            dropout=self.dropout,
+            bidirectional=self.bidirectional,
+            batch_first=True
+        )
+
+        self.rnn_block_2 = nn.RNN(
+            input_size=16,
+            hidden_size=16,
+            num_layers=3,
+            nonlinearity='relu',
+            dropout=self.dropout,
+            bidirectional=self.bidirectional,
+            batch_first=True
+        )
+
+        self.rnn_block_3 = nn.RNN(
+            input_size=16,
+            hidden_size=16,
+            num_layers=3,
+            nonlinearity='relu',
+            dropout=self.dropout,
+            bidirectional=self.bidirectional,
+            batch_first=True
+        )
+
+        self.classification_head = self._create_classification_head()
+
+
+    def _create_classification_head(self):
+        """
+        Create classification head which takes feature
+        extracted by the RNN as input. 
+        This function must be called inside `self._build_network`
+        """
+        in_features = self.sequence_length*16
+        return nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(in_features=in_features, out_features=64),
+            nn.ReLU(),
+            nn.Linear(in_features=64, out_features=self.num_classes),
+            nn.Softmax(dim=1)
+        )
+
 
     def adjust_input(self, x):
         out_ = torch.transpose(x, 1, 2) # bring temporal dim 
@@ -72,11 +128,15 @@ class RnnModelMITBIH (nn.Module):
         out_ = self.adjust_input(x)
         
         # Apply RNN layers
+        out_, hidden_ = self.rnn_block_0(out_)
+        out_, hidden_ = self.rnn_block_1(out_)
+        out_, hidden_ = self.rnn_block_2(out_)
+        out_, hidden_ = self.rnn_block_3(out_)
+
+        out_ = self.classification_head(out_)
 
 
 
-        # shape should be (batch, num_classes)
-        out_ = self.classification_activation_layer(out_)
 
         # Shape should be (batch,) for binary classification case
         # and (batch, num_classes) otherwise
@@ -93,15 +153,19 @@ class RnnModelPTB(RnnModelMITBIH):
         super().__init__(config)
     
     def _build_network(self):
-        self.classification_activation_layer = nn.Sigmoid()
         super()._build_network()
+    
+    def _create_classification_head(self):
+        return nn.Sequential(
+            nn.Sigmoid()
+        )
     
     def reshape_output(self, out_):
         return out_.squeeze()
 
 if __name__ == "__main__":
     n_batch = 3
-    n_feat = 5
+    n_feat = 187
     x = torch.arange(n_batch*n_feat).reshape(n_batch,1,n_feat).type(torch.float32)
     net = RnnModelMITBIH()
     y = net(x)

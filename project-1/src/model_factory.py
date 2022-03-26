@@ -6,6 +6,8 @@ from model_cnn_ae import (UnetEncoder, UnetEncoderDecoder,
 from model_cnn_res import (CnnWithResidualConnection,
  CnnWithResidualConnectionPTB)
 
+from model_rnn_b import RnnModelPTB, RnnModelMITBIH
+
 MODEL_UNET_ENCODER = "UnetEncoder"
 MODEL_UNET_ENCODER_DECODER = "UnetEncoderDecoder"
 MODEL_CNN_ENCODER_DECODER = "CnnEncoderDecoder"
@@ -25,7 +27,9 @@ MODEL_NAME_TO_CLASS_MAP = {
     "CnnPretrainEncoderWithTrainableClassifierHeadPTB": \
         CnnPretrainEncoderWithTrainableClassifierHeadPTB,
     "CnnWithResidualConnectionPTB": \
-        CnnWithResidualConnectionPTB
+        CnnWithResidualConnectionPTB,
+    "RnnModelPTB": RnnModelPTB,
+    "RnnModelMITBIH": RnnModelMITBIH
 
 }
 

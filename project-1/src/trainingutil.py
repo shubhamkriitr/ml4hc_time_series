@@ -432,7 +432,7 @@ PIPELINE_NAME_TO_CLASS_MAP = {
 
 
 if __name__ == "__main__":
-    DEFAULT_CONFIG_LOCATION = "experiment_configs/experiment_2_a_-PTB-_cnn_with_residual_block.yaml"
+    DEFAULT_CONFIG_LOCATION = "experiment_configs/experiment_5_a_MITBIH_rnn.yaml"
     argparser = ArgumentParser()
     argparser.add_argument("--config", type=str,
                             default=DEFAULT_CONFIG_LOCATION)

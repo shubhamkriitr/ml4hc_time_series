@@ -21,3 +21,4 @@ tensorboard_log_frequency: 100 # Log scalars after these many batches
 test_batch_size: 100
 scheduler: 
 task_type: "binary_classification"
+generate_roc_curves: true

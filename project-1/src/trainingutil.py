@@ -13,6 +13,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from data_loader import DataLoaderUtil
 from model_factory import ModelFactory
 from util import get_timestamp_str
+from metric_auroc_auprc import plot_auroc
 
 logger = logging.getLogger(name=__name__)
 
@@ -372,9 +373,9 @@ class ExperimentPipelineUnetPretrained(ExperimentPipeline):
         # 
 
         with torch.no_grad():
-            val_f1, _, _ = self.compute_and_log_evaluation_metrics(
+            val_f1, _, _, _ = self.compute_and_log_evaluation_metrics(
                 model, current_epoch, "val")
-            test_f1, _, _ = self.compute_and_log_evaluation_metrics(
+            test_f1, _, _, y_test_pred_prob = self.compute_and_log_evaluation_metrics(
                 model, current_epoch, "test")
         
         metric_to_use_for_model_selection = val_f1 # TODO: can be pulled in config
@@ -387,6 +388,9 @@ class ExperimentPipelineUnetPretrained(ExperimentPipeline):
             file_path = os.path.join(self.current_experiment_directory,
             "best_model.ckpt")
             torch.save(model.state_dict(), file_path)
+
+            self.generate_roc_curves(self.test_loader.dataset.y,
+                 y_test_pred_prob)
         if hasattr(self, "scheduler"):
             self.scheduler.step(metric_to_use_for_model_selection)
             next_lr = [group['lr'] for group in self.optimizer.param_groups][0]
@@ -421,7 +425,18 @@ class ExperimentPipelineUnetPretrained(ExperimentPipeline):
         self.summary_writer.add_scalar(f"{eval_type}/F1", f1, current_epoch)
         self.summary_writer.add_scalar(f"{eval_type}/Accuracy", acc, current_epoch)
         self.summary_writer.flush()
-        return f1, acc, loss
+        return f1, acc, loss, y_pred_prob
+    
+    def generate_roc_curves(self, y_true, y_pred_prob):
+        if "generate_roc_curves" not in self.config:
+            return
+        if not self.config["generate_roc_curves"]:
+            return
+        save_path_prefix = os.path.join(self.current_experiment_log_directory,
+             get_timestamp_str() + "_metrics_")
+        print("Saving plots at "+save_path_prefix+"*")
+        plot_auroc(y_true, y_pred_prob, save_path_prefix)
+        
 
         
 PIPELINE_NAME_TO_CLASS_MAP = {
@@ -432,7 +447,7 @@ PIPELINE_NAME_TO_CLASS_MAP = {
 
 
 if __name__ == "__main__":
-    DEFAULT_CONFIG_LOCATION = "experiment_configs/experiment_5_a_MITBIH_rnn.yaml"
+    DEFAULT_CONFIG_LOCATION = "experiment_configs/experiment_2_a_-PTB-_cnn_with_residual_block.yaml"
     argparser = ArgumentParser()
     argparser.add_argument("--config", type=str,
                             default=DEFAULT_CONFIG_LOCATION)

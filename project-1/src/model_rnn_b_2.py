@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
 import numpy as np
-
+from torch.nn.functional import one_hot
 from sklearn.metrics import accuracy_score, f1_score
 from data_loader import (MITBIHDataLoader, PTBDataLoader, DataLoaderUtil,
                             DATA_MITBIH, DATA_PTBDB, DataLoaderUtilMini)
@@ -17,9 +17,9 @@ class RNN(nn.Module):
         self.rnn = nn.RNN(input_size, hidden_size, n_layers, batch_first=True, nonlinearity= 'relu')   
         self.linear_layer = nn.Linear(hidden_size, nb_classes)
     def forward(self,input_tensor):
-        h0 = torch.zeros(self.nb_layers,input_tensor_.size(0), self.nb_hidden) #.to(device)
+        #h0 = torch.zeros(self.nb_layers,input_tensor.size(0), self.nb_hidden) #.to(device)
         #hidden_output=self.hidden_layer1(input_tensor.size(0))
-        output, hidden_state = self.rnn(input_tensor,h0)
+        output, hidden_state = self.rnn(input_tensor)
         output = output.reshape(output.shape[0], -1)
         output = self.linear_layer(output)
         return output
@@ -39,8 +39,8 @@ if __name__ == "__main__":
     y_train = train_loader.dataset.y
     x_test = test_loader.dataset.x
     y_test = test_loader.dataset.y
-    x_train=np.transpose(x_train, (0, 2, 1))
-    x_test=np.transpose(x_test, (0, 2, 1))
+    #x_train=np.transpose(x_train, (0, 2, 1))
+    #x_test=np.transpose(x_test, (0, 2, 1))
     print(np.shape(x_train))
     print(np.shape(y_train))
 
@@ -56,7 +56,7 @@ if __name__ == "__main__":
     dim_hidden_layer = 50
     nb_layers=20
     nb_classes_= 5
-    batch_size = 32   
+    batch_size = 1
  
     rnn_model = RNN(input_size, nb_classes=nb_classes_, hidden_size=dim_hidden_layer, n_layers=nb_layers)
     loss_funct = nn.CrossEntropyLoss()
@@ -73,16 +73,19 @@ if __name__ == "__main__":
         for i in range(x_train.size(0)):
             inputs=x_train[i,:,:]
             label =y_train[i]
+            target = torch.tensor(label, dtype=torch.long)
+            #label=torch.nn.functional.one_hot(label, num_classes=5) 
             # remove gradients from previous step
             optimizer.zero_grad()
             outputs = rnn_model(inputs)
-
-            loss = loss_funct(outputs, label)
+            #_, output_max = torch.max(outputs.data, 1)
+            loss = loss_funct(np.squeeze(outputs), target)
             loss.backward()
             # Update parameters each step
             optimizer.step()
             
             loss_count += loss.item()
+            
         average_loss = loss_count / x_train.size(0)
         print ("Epoch: ", epoch, "Average loss: ", average_loss)
 

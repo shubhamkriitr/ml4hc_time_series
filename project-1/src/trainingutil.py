@@ -274,6 +274,9 @@ class ExperimentPipeline(BaseExperimentPipeline):
         elif self.config["cost_function_class_name"] == "CrossEntropyLoss":
             print("Using: CrossEntropyLoss")
             self.cost_function = nn.CrossEntropyLoss()
+        elif self.config["cost_function_class_name"] == "BCELoss":
+            print("Using: BCELoss")
+            self.cost_function = nn.BCELoss()
         else:
             raise NotImplementedError()
 
@@ -400,7 +403,11 @@ class ExperimentPipelineUnetPretrained(ExperimentPipeline):
             x = self.val_loader.dataset.x
             y_true = self.val_loader.dataset.y
         y_pred_prob = model(x)
-        y_pred = torch.argmax(y_pred_prob, axis=1)
+        if "task_type" in self.config and \
+            self.config["task_type"] == "binary_classification":
+            y_pred = (y_pred_prob>0.5).type(torch.int8)
+        else:
+            y_pred = torch.argmax(y_pred_prob, axis=1)
         f1 = f1_score(y_true, y_pred, average="macro")
 
         print("%s f1 score : %s "% (eval_type, f1))
@@ -425,7 +432,7 @@ PIPELINE_NAME_TO_CLASS_MAP = {
 
 
 if __name__ == "__main__":
-    DEFAULT_CONFIG_LOCATION = "experiment_configs/experiment_1_a_cnn_with_residual_block.yaml"
+    DEFAULT_CONFIG_LOCATION = "experiment_configs/test_1.yaml"
     argparser = ArgumentParser()
     argparser.add_argument("--config", type=str,
                             default=DEFAULT_CONFIG_LOCATION)

@@ -1,0 +1,23 @@
+pipeline_class: "ExperimentPipelineUnetPretrained" 
+experiment_metadata:
+  description: "???"
+  tag: "test-CnnEncoder-Clsf-[PTB]"
+dataloader_class_name: "PTBDataLoader" #"BalancedMITBIHDataLoader"
+val_split: 0.1 # validation split ratio
+model_class_name: CnnEncoder #"CnnEncoder" #"CnnPretrainEncoderWithTrainableClassifierHead"
+load_from_checkpoint: true
+checkpoint_path: "runs/2022-03-26_134700__test-CnnEncoder-Clsf-[PTB]/best_model.ckpt"
+cost_function_class_name: "BCELoss"
+trainer_class_name: "CnnTrainer"
+num_epochs: 50
+batch_size: 32
+learning_rate: 0.001
+weight_decay: 0.0
+logdir: "runs"
+test_batch_frequency: 500 # evaluate performance metrics on test data
+#after these many batches have been processed
+batch_log_frequency: 1 # Print log after after these many batches
+tensorboard_log_frequency: 100 # Log scalars after these many batches
+test_batch_size: 100
+scheduler: 
+task_type: "binary_classification"

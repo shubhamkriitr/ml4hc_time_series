@@ -86,6 +86,7 @@ class DataLoaderUtil:
         elif dataset_name == DATA_MITBIH_BAL:
             dataloader = BalancedMITBIHDataLoader()
         elif dataset_name == DATA_PTBDB:
+            self.y_data_type = torch.float32
             dataloader = PTBDataLoader()
         elif dataset_name == DATA_MITBIH_AUTO_ENC:
             self.y_data_type = torch.float32

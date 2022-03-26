@@ -30,7 +30,7 @@ class GlobalMaxPooling(nn.Module):
 class CnnEncoder(nn.Module):
     def __init__(self) -> None:
         super().__init__()
-        self.num_classes = 5
+        self.num_classes = 1
         self.layers = nn.Sequential(
             nn.Conv1d(in_channels=1, out_channels=16, kernel_size=5, stride=1, padding='same'),
             nn.ReLU(),
@@ -62,11 +62,12 @@ class CnnEncoder(nn.Module):
             nn.Linear(in_features=64, out_features=64),
             nn.ReLU(),
             nn.Linear(in_features=64, out_features=self.num_classes),
-            nn.Softmax(dim=1)
+            nn.Sigmoid()
         )
 
     def forward(self, x):
         out_ = self.layers(x)
+        out_ = out_.squeeze()
         return out_
 
 class UnetEncoder(nn.Module):

@@ -27,18 +27,23 @@ class ModelEvaluator:
         
         _, val_loader, test_loader\
              = DataLoaderUtil().get_data_loaders(
-                 dataset_name=dataloader_tag_to_name[dataset_tag]
+                 dataset_name=dataloader_tag_to_name[dataset_tag],
+                 val_split=0.2
         )
 
-        self.evaluate_one(dataset_tag, model, test_loader.dataset.x, 
-            test_loader.dataset.y, "test")
+        with torch.no_grad():
 
-        self.evaluate_one(dataset_tag, model, val_loader.dataset.x,
-            val_loader.dataset.y, "val")
+            self.evaluate_one(dataset_tag, model, test_loader.dataset.x, 
+                test_loader.dataset.y, "test")
+
+            self.evaluate_one(dataset_tag, model, val_loader.dataset.x,
+                val_loader.dataset.y, "val")
         
         
 
     def evaluate_one(self, dataset_tag, model, x, y_true, tag_):
+        model.eval()
+        
         if hasattr(model, "predict"):
             y_pred_prob = model.predict(x)
         else:
@@ -57,7 +62,7 @@ class ModelEvaluator:
 
         if dataset_tag == PTBDB:
             plot_auroc(y_true, y_pred_prob, figure_save_location_prefix=None,
-                plot_tag=tag_)
+                plot_tag=f"[{tag_}]")
 
     def print_scores(self, tag_, f1, acc):
         if tag_ == "test":
@@ -75,7 +80,7 @@ class ModelEvaluator:
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("--model", type=str, choices=data_choices, required=True)
+    parser.add_argument("--model", type=str, choices=model_choices, required=True)
     parser.add_argument("--data", type=str, choices=data_choices, 
                         required=True)
     parser.add_argument("--mode", nargs="+", type=str, required=False,

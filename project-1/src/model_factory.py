@@ -46,7 +46,7 @@ MODEL_NAME_TO_WEIGHTS_PATH = {
     "CnnPretrainEncoderWithTrainableClassifierHeadPTB": \
         None,
     "CnnWithResidualConnectionPTB": \
-        "saved_models/2022-03-26_001545__CnnWithResidualConnection_PTB/best_model.ckpt",
+        "saved_models/2022-03-26_203707__CnnWithResidualConnectionPTB/best_model.ckpt",
     "RnnModelPTB": None,
     "RnnModelMITBIH": None
 }

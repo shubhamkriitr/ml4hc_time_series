@@ -18,9 +18,9 @@ MODEL_CNN_RES = "CNN with Residual Blocks"
 
 class CnnWithResidualConnection(nn.Module):
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, config={"num_classes": 5}, *args, **kwargs) -> None:
         super().__init__()
-        self.num_classes = 5
+        self.num_classes = config["num_classes"]
 
         self.expand_channel = nn.Sequential(
             nn.Conv1d(in_channels=1, out_channels=16, kernel_size=5, stride=1, padding=2),
@@ -122,7 +122,7 @@ class CnnWithResidualConnection(nn.Module):
             nn.Linear(in_features=64, out_features=self.num_classes),
             nn.ReLU()
         )
-        self.softmax = nn.Softmax(dim=1)
+        self.last_layer_activation = nn.Softmax(dim=1)
 
         #generic operations
         self.relu = nn.ReLU()
@@ -164,7 +164,7 @@ class CnnWithResidualConnection(nn.Module):
 
         output_ = self.fc_block(output_)
 
-        output_ = self.softmax(output_)
+        output_ = self.last_layer_activation(output_)
 
         return output_
     
@@ -474,9 +474,15 @@ class CnnWithResidualBlocksPTB(CnnWithResidualBlocks):
         # keeo rest of the architecture same as CnnWithResidualBlocks
         
 class CnnWithResidualConnectionPTB(CnnWithResidualConnection):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.num_classes = 2 # Binary classification for PTB dataset
+    def __init__(self, config={"num_classes": 1}, *args, **kwargs) -> None:
+        super().__init__(config, *args, **kwargs)
+        self.num_classes = 1 # Binary classification for PTB dataset
+        self.last_layer_activation = nn.Sigmoid()
+    
+    def forward(self, x):
+        out_ =  super().forward(x)
+        out_ = out_.squeeze() # for BCELoss size needs to be changed (array)
+        return out_
 
 
 

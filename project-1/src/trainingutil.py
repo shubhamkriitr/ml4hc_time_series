@@ -431,10 +431,22 @@ class ExperimentPipelineForClassifier(ExperimentPipeline):
         if eval_type == "val":
             x = self.val_loader.dataset.x
             y_true = self.val_loader.dataset.y
+        
+        model_output = None
+        try:
+            model_output = model(x)
+        except Exception as exc:
+            print(exc)
+
         if hasattr(model, "predict"):
             y_pred_prob = model.predict(x)
+            if model_output is None:
+                model_output = y_pred_prob
         else:
-            y_pred_prob = model(x)
+            if model_output is None:
+                model_output = model(x)
+            y_pred_prob = model_output
+
         if "task_type" in self.config and \
                 self.config["task_type"] == "binary_classification":
             if torch.max(y_pred_prob) > 1.0 or torch.min(y_pred_prob) < 0.:
@@ -448,7 +460,7 @@ class ExperimentPipelineForClassifier(ExperimentPipeline):
 
         acc = accuracy_score(y_true, y_pred)
             
-        loss = self.cost_function(input=y_pred_prob, target=y_true)
+        loss = self.cost_function(input=model_output, target=y_true)
         print(f"{eval_type} acc: {acc}")
         print(f"{eval_type} loss: {loss}")
         self.summary_writer.add_scalar(f"{eval_type}/loss", loss, current_epoch)

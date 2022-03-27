@@ -485,7 +485,11 @@ class CnnWithResidualConnectionPTB(CnnWithResidualConnection):
         return out_
 
 
+class CnnWithResidualConnectionTransferMitbihToPtb(CnnWithResidualConnectionPTB):
+    def __init__(self, config={ "num_classes": 1 }, *args, **kwargs) -> None:
+        super().__init__(config, *args, **kwargs)
 
+class CnnWithResidualConnectionTransferPtbToM
 
 if __name__ == "__main__":
     output_channels = [16, 16, 16, 16]

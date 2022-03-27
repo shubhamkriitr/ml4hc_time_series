@@ -1,5 +1,5 @@
 import torch
-from model_cnn_ae import (UnetEncoder, UnetEncoderDecoder,
+from model_cnn_ae import (
  CnnPretrainEncoderWithTrainableClassifierHead, CnnEncoderDecoder,
  CnnEncoder, CnnPretrainEncoderWithTrainableClassifierHeadPTB, 
  )
@@ -12,8 +12,6 @@ from model_cnn_2d import (CnnModel2DMITBIH)
 from model_transformer import (TransformerModelMITBIH, TransformerModelPTB)
 
 
-MODEL_UNET_ENCODER = "UnetEncoder"
-MODEL_UNET_ENCODER_DECODER = "UnetEncoderDecoder"
 MODEL_CNN_ENCODER_DECODER = "CnnEncoderDecoder"
 MODEL_CNN_ENCODER = "CnnEncoder"
 MODEL_UNET_PRETRAINED_ENCODER_NN_CLASSIFIER = \
@@ -21,8 +19,6 @@ MODEL_UNET_PRETRAINED_ENCODER_NN_CLASSIFIER = \
 
 
 MODEL_NAME_TO_CLASS_MAP = {
-    MODEL_UNET_ENCODER: UnetEncoder,
-    MODEL_UNET_ENCODER_DECODER: UnetEncoderDecoder,
     MODEL_UNET_PRETRAINED_ENCODER_NN_CLASSIFIER:\
          CnnPretrainEncoderWithTrainableClassifierHead,
     MODEL_CNN_ENCODER_DECODER: CnnEncoderDecoder,
@@ -42,8 +38,6 @@ MODEL_NAME_TO_CLASS_MAP = {
 
 
 MODEL_NAME_TO_WEIGHTS_PATH = {
-    MODEL_UNET_ENCODER: None,
-    MODEL_UNET_ENCODER_DECODER: None,
     MODEL_UNET_PRETRAINED_ENCODER_NN_CLASSIFIER:\
          None,
     MODEL_CNN_ENCODER_DECODER: None,

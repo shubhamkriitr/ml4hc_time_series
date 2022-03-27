@@ -173,7 +173,12 @@ class CnnPretrainEncoderWithTrainableClassifierHead(nn.Module):
     
     def forward(self, x):
         output_ = self.encoder(x)
-        output_ = self.classifier(output_)
+        logits = self.classifier(output_)
+        
+        return logits
+    
+    def predict(self, x):
+        output_ = self.forward(x)
         output_ = self.clasification_layer_activation(output_)
         return output_
     

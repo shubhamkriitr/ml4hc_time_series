@@ -414,9 +414,14 @@ class ExperimentPipelineForClassifier(ExperimentPipeline):
         if eval_type == "val":
             x = self.val_loader.dataset.x
             y_true = self.val_loader.dataset.y
-        y_pred_prob = model(x)
+        if hasattr(model, "predict"):
+            y_pred_prob = model.predict(x)
+        else:
+            y_pred_prob = model(x)
         if "task_type" in self.config and \
-            self.config["task_type"] == "binary_classification":
+                self.config["task_type"] == "binary_classification":
+            if torch.max(y_pred_prob) > 1.0 or torch.min(y_pred_prob) < 0.:
+                print("warning!: expected probability but received logits!")
             y_pred = (y_pred_prob>0.5).type(torch.int8)
         else:
             y_pred = torch.argmax(y_pred_prob, axis=1)
@@ -455,7 +460,7 @@ PIPELINE_NAME_TO_CLASS_MAP = {
 
 
 if __name__ == "__main__":
-    DEFAULT_CONFIG_LOCATION = "experiment_configs/experiment_8_b_cnn_autoenc_classifier_mitbih.yaml"
+    DEFAULT_CONFIG_LOCATION = "experiment_configs/experiment_2_a_-PTB-_cnn_with_residual_block.yaml"
     argparser = ArgumentParser()
     argparser.add_argument("--config", type=str,
                             default=DEFAULT_CONFIG_LOCATION)

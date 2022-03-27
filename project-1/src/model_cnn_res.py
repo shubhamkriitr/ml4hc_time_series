@@ -162,8 +162,13 @@ class CnnWithResidualConnection(nn.Module):
 
         output_ = self.fc_block(output_)
 
-        output_ = self.last_layer_activation(output_)
+        
 
+        return output_ # this is logit not probability
+    
+    def predict(self, x):
+        output_ = self.forward(x)
+        output_ = self.last_layer_activation(output_)
         return output_
     
     def initialize_parameters(self):
@@ -186,8 +191,15 @@ class CnnWithResidualConnectionPTB(CnnWithResidualConnection):
     
     def forward(self, x):
         out_ =  super().forward(x)
+
+        # converting to prob in `forward` function beacuse logits cannot
+        # be passed to 
+        out_ = self.last_layer_activation(out_)
         out_ = out_.squeeze() # for BCELoss size needs to be changed (array)
         return out_
+    
+    def predict(self, x):
+        return self.forward(x)
 
 
 class CnnWithResidualConnectionTransferMitbihToPtb(CnnWithResidualConnectionPTB):

@@ -1,7 +1,8 @@
 import torch
 from model_cnn_ae import (
  CnnPretrainEncoderWithTrainableClassifierHead, CnnEncoderDecoder,
- CnnEncoder, CnnPretrainEncoderWithTrainableClassifierHeadPTB, 
+ CnnEncoder, CnnPretrainEncoderWithTrainableClassifierHeadPTB,
+ CnnPretrainEncoderWithTrainableClassifierHeadPartiallyFrozen
  )
 
 from model_cnn_res import (CnnWithResidualConnection,
@@ -32,7 +33,8 @@ MODEL_NAME_TO_CLASS_MAP = {
     "RnnModelMITBIH": RnnModelMITBIH,
     "CnnModel2DMITBIH": CnnModel2DMITBIH,
     "TransformerModelMITBIH": TransformerModelMITBIH,
-    "TransformerModelPTB": TransformerModelPTB
+    "TransformerModelPTB": TransformerModelPTB,
+    "CnnPretrainEncoderWithTrainableClassifierHeadPartiallyFrozen": CnnPretrainEncoderWithTrainableClassifierHeadPartiallyFrozen
 
 }
 
@@ -51,7 +53,8 @@ MODEL_NAME_TO_WEIGHTS_PATH = {
     "RnnModelMITBIH": None,
     "CnnModel2DMITBIH": None,
     "TransformerModelMITBIH": None,
-    "TransformerModelPTB": TransformerModelPTB
+    "TransformerModelPTB": TransformerModelPTB,
+    "CnnPretrainEncoderWithTrainableClassifierHeadPartiallyFrozen": None
 }
 class ModelFactory(object):
     def get(self, model_name):

@@ -455,7 +455,7 @@ PIPELINE_NAME_TO_CLASS_MAP = {
 
 
 if __name__ == "__main__":
-    DEFAULT_CONFIG_LOCATION = "experiment_configs/experiment_8_a_cnn_autoencoder_mitbih.yaml"
+    DEFAULT_CONFIG_LOCATION = "experiment_configs/experiment_8_b_cnn_autoenc_classifier_mitbih.yaml"
     argparser = ArgumentParser()
     argparser.add_argument("--config", type=str,
                             default=DEFAULT_CONFIG_LOCATION)

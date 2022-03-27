@@ -102,9 +102,11 @@ class CnnEncoder(nn.Module):
             nn.ReLU(),
             nn.MaxPool1d(kernel_size=2),
             nn.Dropout(p=0.1),
-            nn.Conv1d(in_channels=32, out_channels=32, kernel_size=3, stride=1, padding='same'),
+            nn.Conv1d(in_channels=32, out_channels=256, kernel_size=3, stride=1, padding='same'),
             nn.ReLU(),
-            nn.Conv1d(in_channels=32, out_channels=32, kernel_size=3, stride=1, padding='same'),
+            nn.Conv1d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding='same'),
+            nn.ReLU(),
+            nn.Conv1d(in_channels=256, out_channels=32, kernel_size=3, stride=1, padding='same'),
             nn.ReLU(),
             GlobalMaxPooling(dims=(2))
             # nn.Dropout(p=0.1),
@@ -184,9 +186,26 @@ class CnnPretrainEncoderWithTrainableClassifierHead(nn.Module):
         # Also freezing the encoder layers:
         for name, param in self.named_parameters():
             if name.startswith("encoder."):
-                param.requires_grad = False
+                param.requires_grad = True # FIXME
             # Also make sure these weights are not passed to the optimizer
 
+
+class CnnPretrainEncoderWithTrainableClassifierHeadPartiallyFrozen(
+    CnnPretrainEncoderWithTrainableClassifierHead):
+    def __init__(self, config={ "num_classes": 5 }) -> None:
+        super().__init__(config)
+    
+    def load_state_dict(self, state_dict, strict=False):
+        super().load_state_dict(state_dict, strict)
+
+        #unfreeze encoder layers with these ids
+        layer_nums = [12, 14]
+
+        for name, param in self.named_parameters():
+            if name.startswith("encoder."):
+                layer_num = int(name.split(".")[2])
+                if layer_num in layer_nums:
+                    param.requires_grad = True
 
 class CnnPretrainEncoderWithTrainableClassifierHeadPTB(
     CnnPretrainEncoderWithTrainableClassifierHead

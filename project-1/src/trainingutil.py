@@ -10,7 +10,7 @@ from torch.optim.adamw import AdamW
 from torch.optim.optimizer import Optimizer
 from torch.utils.tensorboard import SummaryWriter
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from data_loader import DataLoaderUtil
+from data_loader import DataLoaderUtil, ClassWeights
 from model_factory import ModelFactory
 from util import get_timestamp_str
 from metric_auroc_auprc import plot_auroc
@@ -269,17 +269,34 @@ class ExperimentPipeline(BaseExperimentPipeline):
             log_dir=self.current_experiment_log_directory)
 
     def prepare_cost_function(self):
+        class_weights = self.prepare_class_weights_for_cost_function()
+        if class_weights is not None:
+            print("Using class weights: ", class_weights)
         if self.config["cost_function_class_name"] == "MSELoss":
             print("Using: MSELoss")
             self.cost_function = nn.MSELoss()
         elif self.config["cost_function_class_name"] == "CrossEntropyLoss":
             print("Using: CrossEntropyLoss")
-            self.cost_function = nn.CrossEntropyLoss()
+            self.cost_function = nn.CrossEntropyLoss(weight=class_weights)
         elif self.config["cost_function_class_name"] == "BCELoss":
             print("Using: BCELoss")
-            self.cost_function = nn.BCELoss()
+            self.cost_function = nn.BCELoss(weight=class_weights    )
         else:
             raise NotImplementedError()
+    
+    def prepare_class_weights_for_cost_function(self):
+        if "do_class_weighting" in self.config and \
+                self.config["do_class_weighting"]:
+            # Based on the data loader being used and the weighting scheme,
+            #  fetch the class weights
+            return ClassWeights().get(
+                self.config["dataloader_class_name"],
+                self.config["class_weighting_scheme"])
+        
+        # None is the default value for most of the cost classes
+
+        return None
+        
 
     def prepare_batch_callbacks(self):
         self.batch_callbacks = [self.batch_callback]

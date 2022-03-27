@@ -27,6 +27,42 @@ DATA_PTBDB_AUTO_ENC = "PTBDataLoaderForAutoEncoder"
 
 MAX_SIZE_IN_BALANCED_DATASET = 3000 # max num of samples
 
+class ClassWeights:
+    def get(self, dataloader_name, weight_scheme=None):
+        """
+        This is typical training data statistics:
+        MITBIH:
+        Classes: tensor([0, 1, 2, 3, 4]) 
+        Counts: tensor([57977,  1778,  4630,   513,  5145])
+        Percentage: tensor([82.7734,  2.5384,  6.6102,  0.7324,  7.3455])
+       
+        PTBDB:
+
+
+        """
+        frequencies = self.get_frequencies(dataloader_name)
+        if weight_scheme is None:
+            return self.inverse_frequency_square(frequencies)
+
+    
+    def get_frequencies(self, dataloader_name):
+        if MITBIH in dataloader_name.lower():
+            return torch.tensor([57977,  1778,  4630,   513,  5145],
+                dtype=torch.float32)
+    
+    def get_proportions(self, dataloader_name):
+        frequencies = self.get_frequencies(dataloader_name)
+        return frequencies/torch.sum(frequencies)
+
+    def median_frequency_balancing(self, frequencies):
+        raise NotImplementedError()
+
+    def inverse_frequency_square(self, frequencies):
+        return 1.0/(frequencies*frequencies)
+
+
+
+
 
 class TaskDataset(Dataset):
     def __init__(self, x, y):

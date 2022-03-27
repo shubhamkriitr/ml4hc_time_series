@@ -17,6 +17,7 @@ class RnnModelMITBIH (nn.Module):
         # of elements
         self.input_feature_chunk_size = 94
         self.input_original_feature_size = 187
+        self.last_layer_activation = nn.Softmax(dim=1)
 
 
         self._compute_and_initialize_sequence_length_and_padding()
@@ -99,7 +100,7 @@ class RnnModelMITBIH (nn.Module):
             nn.Linear(in_features=in_features, out_features=64),
             nn.ReLU(),
             nn.Linear(in_features=64, out_features=self.num_classes),
-            nn.Softmax(dim=1)
+            
         )
 
 
@@ -143,7 +144,13 @@ class RnnModelMITBIH (nn.Module):
 
         # Shape should be (batch,) for binary classification case
         # and (batch, num_classes) otherwise
+        # N.B. it is logits
         return self.reshape_output(out_)
+
+    def predict(self, x):
+        out_ = self.forward(x)
+        out_ = self.last_layer_activation(out_)
+        return out_
     
     def reshape_output(self, out_):
         # shape does not need to changed for this
@@ -156,12 +163,16 @@ class RnnModelPTB(RnnModelMITBIH):
         super().__init__(config)
     
     def _build_network(self):
+        self.last_layer_activation = nn.Sigmoid()
         super()._build_network()
     
-    def _create_classification_head(self):
-        return nn.Sequential(
-            nn.Sigmoid()
-        )
+    
+    def forward(self, x):
+        logits = super().forward(x)
+        return self.last_layer_activation(logits)
+
+    def predict(self, x):
+        return self.forward(x)
     
     def reshape_output(self, out_):
         return out_.squeeze()

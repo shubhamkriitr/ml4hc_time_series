@@ -11,11 +11,11 @@ class RnnModelMITBIH (nn.Module):
 
         #network level hyper parameters 
         self.dropout = 0.0
-        self.bidirectional = False
+        self.bidirectional = True
 
         # each of the vector passed to the RNN would have this many number
         # of elements
-        self.input_feature_chunk_size = 21
+        self.input_feature_chunk_size = 1
         self.input_original_feature_size = 187
 
 
@@ -51,8 +51,10 @@ class RnnModelMITBIH (nn.Module):
             batch_first=True
         )
 
+        feature_factor = 2 if self.bidirectional else 1
+
         self.rnn_block_1 = nn.RNN(
-            input_size=32,
+            input_size=32*feature_factor,
             hidden_size=16,
             num_layers=3,
             nonlinearity='relu',
@@ -62,7 +64,7 @@ class RnnModelMITBIH (nn.Module):
         )
 
         self.rnn_block_2 = nn.RNN(
-            input_size=16,
+            input_size=16*feature_factor,
             hidden_size=16,
             num_layers=3,
             nonlinearity='relu',
@@ -72,7 +74,7 @@ class RnnModelMITBIH (nn.Module):
         )
 
         self.rnn_block_3 = nn.RNN(
-            input_size=16,
+            input_size=16*feature_factor,
             hidden_size=16,
             num_layers=3,
             nonlinearity='relu',
@@ -90,7 +92,8 @@ class RnnModelMITBIH (nn.Module):
         extracted by the RNN as input. 
         This function must be called inside `self._build_network`
         """
-        in_features = self.sequence_length*16
+        feature_factor = 2 if self.bidirectional else 1
+        in_features = self.sequence_length*16*feature_factor
         return nn.Sequential(
             nn.Flatten(),
             nn.Linear(in_features=in_features, out_features=64),

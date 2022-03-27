@@ -8,6 +8,9 @@ from model_cnn_res import (CnnWithResidualConnection,
  CnnWithResidualConnectionPTB)
 
 from model_rnn_b import RnnModelPTB, RnnModelMITBIH
+from model_cnn_2d import (CnnModel2DMITBIH)
+from model_transformer import (TransformerModelMITBIH, TransformerModelPTB)
+
 
 MODEL_UNET_ENCODER = "UnetEncoder"
 MODEL_UNET_ENCODER_DECODER = "UnetEncoderDecoder"
@@ -30,7 +33,10 @@ MODEL_NAME_TO_CLASS_MAP = {
     "CnnWithResidualConnectionPTB": \
         CnnWithResidualConnectionPTB,
     "RnnModelPTB": RnnModelPTB,
-    "RnnModelMITBIH": RnnModelMITBIH
+    "RnnModelMITBIH": RnnModelMITBIH,
+    "CnnModel2DMITBIH": CnnModel2DMITBIH,
+    "TransformerModelMITBIH": TransformerModelMITBIH,
+    "TransformerModelPTB": TransformerModelPTB
 
 }
 
@@ -48,7 +54,10 @@ MODEL_NAME_TO_WEIGHTS_PATH = {
     "CnnWithResidualConnectionPTB": \
         "saved_models/2022-03-26_203707__CnnWithResidualConnectionPTB/best_model.ckpt",
     "RnnModelPTB": None,
-    "RnnModelMITBIH": None
+    "RnnModelMITBIH": None,
+    "CnnModel2DMITBIH": None,
+    "TransformerModelMITBIH": None,
+    "TransformerModelPTB": TransformerModelPTB
 }
 class ModelFactory(object):
     def get(self, model_name):

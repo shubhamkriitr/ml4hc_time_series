@@ -15,7 +15,7 @@ class RnnModelMITBIH (nn.Module):
 
         # each of the vector passed to the RNN would have this many number
         # of elements
-        self.input_feature_chunk_size = 1
+        self.input_feature_chunk_size = 94
         self.input_original_feature_size = 187
 
 

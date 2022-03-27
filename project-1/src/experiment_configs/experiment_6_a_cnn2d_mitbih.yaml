@@ -1,0 +1,22 @@
+pipeline_class: "ExperimentPipelineUnetPretrained" 
+experiment_metadata:
+  description: "CnnModel2DMITBIH"
+  tag: "CnnModel2DMITBIH"
+dataloader_class_name: "MITBIHDataLoader" #"BalancedMITBIHDataLoader"
+val_split: 0.2 # validation split ratio
+model_class_name: CnnModel2DMITBIH #"CnnEncoder" #"CnnPretrainEncoderWithTrainableClassifierHead"
+load_from_checkpoint: false
+checkpoint_path: ""
+cost_function_class_name: "CrossEntropyLoss"
+trainer_class_name: "CnnTrainer"
+num_epochs: 50
+batch_size: 200
+learning_rate: 0.001
+weight_decay: 0.0000001
+logdir: "runs"
+test_batch_frequency: 500 # evaluate performance metrics on test data
+#after these many batches have been processed
+batch_log_frequency: 1 # Print log after after these many batches
+tensorboard_log_frequency: 100 # Log scalars after these many batches
+test_batch_size: 100
+scheduler: "ReduceLROnPlateau"

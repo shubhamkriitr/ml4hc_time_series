@@ -19,6 +19,21 @@ class ChannelMaxPooling(nn.Module):
         x, _ = torch.max(x, dim=1, keepdim=True) # assuming dim 1 is channel dim
         return x
 
+class CollateAllFeaturesToChannel (nn.Module):
+    """
+    Flattens the features and collects then along channel dimension
+    """
+    def __init__(self) -> None:
+        super().__init__()
+        self.flatten = nn.Flatten()
+    
+    def forward(self, x):
+        x = self.flatten(x)
+        x = torch.unsqueeze(x, dim=2) # (batch, collected_features(channel), 1)
+        return x
+
+
+
 class GlobalMaxPooling(nn.Module):
     def __init__(self, dims=None) -> None:
         super().__init__()
@@ -91,12 +106,12 @@ class CnnEncoder(nn.Module):
             nn.ReLU(),
             nn.Conv1d(in_channels=32, out_channels=32, kernel_size=3, stride=1, padding='same'),
             nn.ReLU(),
-            nn.MaxPool1d(kernel_size=2),
-            nn.Dropout(p=0.1),
-            nn.Conv1d(in_channels=32, out_channels=256, kernel_size=3, stride=1, padding='same'),
-            nn.ReLU(),
-            nn.Conv1d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding='same'),
-            nn.ReLU()
+            GlobalMaxPooling(dims=(2))
+            # nn.Dropout(p=0.1),
+            # nn.Conv1d(in_channels=32, out_channels=256, kernel_size=3, stride=1, padding='same'),
+            # nn.ReLU(),
+            # nn.Conv1d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding='same'),
+            # nn.ReLU()
         )
 
     def forward(self, x):
@@ -108,11 +123,21 @@ class CnnDecoder(nn.Module):
     def __init__(self) -> None:
         super().__init__()
 
-        self.layers = None
+        self.layers = nn.Sequential(
+            nn.ConvTranspose1d(in_channels=32, out_channels=32, kernel_size=3, stride=2),
+            nn.ReLU(),
+            nn.ConvTranspose1d(in_channels=32, out_channels=32, kernel_size=3, stride=2),
+            nn.ReLU(),
+            CollateAllFeaturesToChannel(),
+            nn.Conv1d(in_channels=224, out_channels=187, kernel_size=1),
+            nn.ReLU()
+        )
 
     
     def forward(self, encoder_ouput):
-        return encoder_ouput
+        decoder_output = self.layers(encoder_ouput)
+        decoder_output = torch.permute(decoder_output, (0, 2, 1))
+        return decoder_output
         
 class CnnEncoderDecoder(nn.Module):
     def __init__(self) -> None:
@@ -129,26 +154,25 @@ class CnnEncoderDecoder(nn.Module):
 class CnnPretrainEncoderWithTrainableClassifierHead(nn.Module):
     def __init__(self, config={"num_classes": 5}) -> None:
         super().__init__()
+        # This model can load weights of trained 
+        # CnnEncoderDecoder (it will only use the encoder weights though)
         self.num_classes = config["num_classes"]
         self.encoder = CnnEncoder()
         self.classifier = nn.Sequential(
-            # nn.Conv1d(in_channels=3, out_channels=2, kernel_size=2, padding='same'),
-            # nn.ReLU(),
-            # nn.Conv1d(in_channels=3, out_channels=2, kernel_size=2, padding='same'), 
-            # nn.ReLU(),
             nn.Flatten(), # flatten the feature map
-            nn.Linear(in_features=44, out_features=16),
+            nn.Linear(in_features=32, out_features=16),
+            nn.ReLU(),
+            nn.Linear(in_features=16, out_features=16),
             nn.ReLU(),
             nn.Linear(in_features=16, out_features=self.num_classes),
             nn.ReLU()
         )
-        self.softmax = nn.Softmax(dim=1)
+        self.clasification_layer_activation = nn.Softmax(dim=1)
     
     def forward(self, x):
-        output_, pooling_indices = self.encoder(x)
-        z = output_[0] # feature in low dimensional latent space
-        output_ = self.classifier(z)
-        output_ = self.softmax(output_)
+        output_ = self.encoder(x)
+        output_ = self.classifier(output_)
+        output_ = self.clasification_layer_activation(output_)
         return output_
     
     def load_state_dict(self, state_dict, strict=False):
@@ -160,15 +184,16 @@ class CnnPretrainEncoderWithTrainableClassifierHead(nn.Module):
         # Also freezing the encoder layers:
         for name, param in self.named_parameters():
             if name.startswith("encoder."):
-                param.requires_grad = True #FIXME
+                param.requires_grad = False
             # Also make sure these weights are not passed to the optimizer
 
 
 class CnnPretrainEncoderWithTrainableClassifierHeadPTB(
     CnnPretrainEncoderWithTrainableClassifierHead
 ):
-    def __init__(self, config={ "num_classes": 2 }) -> None:
+    def __init__(self, config={ "num_classes": 1 }) -> None:
         super().__init__(config)
+        self.clasification_layer_activation = nn.Sigmoid()
 
 def test_load_model_weights(model: nn.Module, weights_path):
     model_state_dict = torch.load(weights_path)

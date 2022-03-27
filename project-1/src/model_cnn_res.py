@@ -194,10 +194,6 @@ class CnnWithResidualConnectionTransferMitbihToPtb(CnnWithResidualConnectionPTB)
     def __init__(self, config={ "num_classes": 1 }, *args, **kwargs) -> None:
         super().__init__(config, *args, **kwargs)
 
-class CnnWithResidualConnectionTransferPtbToMitbih(CnnWithResidualConnection):
-    def __init__(self, config={ "num_classes": 5 }, *args, **kwargs) -> None:
-        super().__init__(config, *args, **kwargs)
-
 class ResidualBlock(nn.Module):
     def __init__(self, num_input_channels, layerwise_num_ouput_channels,
                 kernel_sizes, strides, paddings, shortcut_connection_flags,

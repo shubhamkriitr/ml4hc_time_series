@@ -307,23 +307,6 @@ class ExperimentPipeline(BaseExperimentPipeline):
             self.save_config()
     
         model.eval()
-        n_mc_samples = 1
-        with torch.no_grad():
-            
-            x = self.test_loader.dataset.x
-            y_true = self.test_loader.dataset.y
-
-            y_pred_prob = model(x)/n_mc_samples
-            for nmc in range(n_mc_samples -1):
-                y_pred_prob = y_pred_prob + model(x)/n_mc_samples
-            y_pred = y_pred_prob
-            
-            loss = self.cost_function(input=y_pred, target=y_true)
-
-            print(f"Test loss: {loss}")
-            self.summary_writer.add_scalar("test/loss", loss, current_epoch)
-            self.summary_writer.flush()
-        return loss
 
     def save_config(self):
         try:
@@ -342,7 +325,7 @@ class ExperimentPipelineForAutoEncoder(ExperimentPipeline):
 
     def epoch_callback(self, model: nn.Module, batch_data, global_batch_number,
      current_epoch, current_epoch_batch_number, **kwargs):
-        loss = super().epoch_callback(model, batch_data, global_batch_number, 
+        super().epoch_callback(model, batch_data, global_batch_number, 
         current_epoch, current_epoch_batch_number, **kwargs)
         if current_epoch == 1:
             with torch.no_grad():
@@ -356,9 +339,11 @@ class ExperimentPipelineForAutoEncoder(ExperimentPipeline):
         metric_name = "Validation loss"
         metric_value = val_loss
 
+        print(f"{metric_name}: {metric_value}")
+
         if metric_value < self.best_loss:
             print(f"Saving model: {metric_name} changed from {self.best_loss}"
-                  f" to {loss}")
+                  f" to {metric_value}")
             self.best_loss = metric_value
             file_path = os.path.join(self.current_experiment_directory,
             "best_model.ckpt")
@@ -470,7 +455,7 @@ PIPELINE_NAME_TO_CLASS_MAP = {
 
 
 if __name__ == "__main__":
-    DEFAULT_CONFIG_LOCATION = "experiment_configs/experiment_7_a_transformer_mitbih.yaml"
+    DEFAULT_CONFIG_LOCATION = "experiment_configs/experiment_8_a_cnn_autoencoder_mitbih.yaml"
     argparser = ArgumentParser()
     argparser.add_argument("--config", type=str,
                             default=DEFAULT_CONFIG_LOCATION)

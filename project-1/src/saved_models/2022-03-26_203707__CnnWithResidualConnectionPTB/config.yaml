@@ -12,7 +12,7 @@ load_from_checkpoint: false
 logdir: runs
 model_class_name: CnnWithResidualConnectionPTB
 num_epochs: 60
-pipeline_class: ExperimentPipelineUnetPretrained
+pipeline_class: ExperimentPipelineForClassifier
 scheduler: null
 task_type: binary_classification
 tensorboard_log_frequency: 100

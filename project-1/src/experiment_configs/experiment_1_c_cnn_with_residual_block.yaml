@@ -1,4 +1,4 @@
-pipeline_class: "ExperimentPipelineUnetPretrained" 
+pipeline_class: "ExperimentPipelineForClassifier" 
 experiment_metadata:
   description: "CNN + Residual connections / No lr scheduler/ 100 epochs"
   tag: "CnnWithResidualConnection"

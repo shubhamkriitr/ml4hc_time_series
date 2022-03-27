@@ -1,4 +1,4 @@
-pipeline_class: "ExperimentPipelineUnetPretrained" 
+pipeline_class: "ExperimentPipelineForClassifier" 
 experiment_metadata:
   description: "Trying out pretrained encoder and trainable classification \
                head. Pretraining was done in encoder-decoder pipeline."

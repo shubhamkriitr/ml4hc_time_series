@@ -1,4 +1,4 @@
-pipeline_class: "ExperimentPipelineUnetPretrained" 
+pipeline_class: "ExperimentPipelineForClassifier" 
 experiment_metadata:
   description: "RNN model on PTB dataset"
   tag: "RnnModelPTB[PTB]"

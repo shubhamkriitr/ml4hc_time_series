@@ -1,4 +1,4 @@
-pipeline_class: "ExperimentPipelineUnetPretrained" 
+pipeline_class: "ExperimentPipelineForClassifier" 
 experiment_metadata:
   description: "CnnModel2DMITBIH"
   tag: "CnnModel2DMITBIH"

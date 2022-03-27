@@ -1,4 +1,4 @@
-pipeline_class: "ExperimentPipelineUnetPretrained" 
+pipeline_class: "ExperimentPipelineForClassifier" 
 experiment_metadata:
   description: "(NO LR scheduling)Checking how many epochs it take to get F1>=90.(\
                 Trying out pretrained encoder and trainable classification \

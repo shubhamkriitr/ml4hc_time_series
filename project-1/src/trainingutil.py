@@ -379,7 +379,7 @@ class ExperimentPipelineForAutoEncoder(ExperimentPipeline):
 
 
 
-class ExperimentPipelineUnetPretrained(ExperimentPipeline):
+class ExperimentPipelineForClassifier(ExperimentPipeline):
     def __init__(self, config) -> None:
         super().__init__(config)
         self.best_metric = None
@@ -465,7 +465,7 @@ class ExperimentPipelineUnetPretrained(ExperimentPipeline):
 PIPELINE_NAME_TO_CLASS_MAP = {
     "ExperimentPipeline": ExperimentPipeline,
     "ExperimentPipelineForAutoEncoder": ExperimentPipelineForAutoEncoder,
-    "ExperimentPipelineUnetPretrained": ExperimentPipelineUnetPretrained
+    "ExperimentPipelineForClassifier": ExperimentPipelineForClassifier
 }
 
 

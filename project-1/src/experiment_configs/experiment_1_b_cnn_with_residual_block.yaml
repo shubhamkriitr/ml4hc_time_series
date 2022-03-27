@@ -1,4 +1,4 @@
-pipeline_class: "ExperimentPipelineUnetPretrained" 
+pipeline_class: "ExperimentPipelineForClassifier" 
 experiment_metadata:
   description: "CNN + Residual connections: Using weights from last experiment
     starting with lower learning rate than previous experiment. Also

@@ -13,8 +13,6 @@ from util import get_timestamp_str
 
 logger = logging.getLogger(name=__name__)
 
-MODEL_CNN_RES = "CNN with Residual Blocks"
-
 
 class CnnWithResidualConnection(nn.Module):
 
@@ -179,7 +177,26 @@ class CnnWithResidualConnection(nn.Module):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
     
+
+class CnnWithResidualConnectionPTB(CnnWithResidualConnection):
+    def __init__(self, config={"num_classes": 1}, *args, **kwargs) -> None:
+        super().__init__(config, *args, **kwargs)
+        self.num_classes = 1 # Binary classification for PTB dataset
+        self.last_layer_activation = nn.Sigmoid()
     
+    def forward(self, x):
+        out_ =  super().forward(x)
+        out_ = out_.squeeze() # for BCELoss size needs to be changed (array)
+        return out_
+
+
+class CnnWithResidualConnectionTransferMitbihToPtb(CnnWithResidualConnectionPTB):
+    def __init__(self, config={ "num_classes": 1 }, *args, **kwargs) -> None:
+        super().__init__(config, *args, **kwargs)
+
+class CnnWithResidualConnectionTransferPtbToMitbih(CnnWithResidualConnection):
+    def __init__(self, config={ "num_classes": 5 }, *args, **kwargs) -> None:
+        super().__init__(config, *args, **kwargs)
 
 class ResidualBlock(nn.Module):
     def __init__(self, num_input_channels, layerwise_num_ouput_channels,
@@ -473,32 +490,5 @@ class CnnWithResidualBlocksPTB(CnnWithResidualBlocks):
         self.config["num_classes"] = 2 # change the number of classes for PTB
         # keeo rest of the architecture same as CnnWithResidualBlocks
         
-class CnnWithResidualConnectionPTB(CnnWithResidualConnection):
-    def __init__(self, config={"num_classes": 1}, *args, **kwargs) -> None:
-        super().__init__(config, *args, **kwargs)
-        self.num_classes = 1 # Binary classification for PTB dataset
-        self.last_layer_activation = nn.Sigmoid()
-    
-    def forward(self, x):
-        out_ =  super().forward(x)
-        out_ = out_.squeeze() # for BCELoss size needs to be changed (array)
-        return out_
 
 
-class CnnWithResidualConnectionTransferMitbihToPtb(CnnWithResidualConnectionPTB):
-    def __init__(self, config={ "num_classes": 1 }, *args, **kwargs) -> None:
-        super().__init__(config, *args, **kwargs)
-
-class CnnWithResidualConnectionTransferPtbToM
-
-if __name__ == "__main__":
-    output_channels = [16, 16, 16, 16]
-    kernel_sizes = [3 for i in range(len(output_channels))]
-    paddings = [1 for i in range(len(output_channels))]
-    strides = [2, 1, 1, 1]
-    shortcut_connection_flags = [0, 1]*2
-
-    res_block = ResidualBlock(1, output_channels, kernel_sizes, strides,
-                     paddings, shortcut_connection_flags, True)
-
-    print(res_block)

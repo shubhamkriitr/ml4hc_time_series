@@ -122,7 +122,7 @@ class CnnEncoderDecoder(nn.Module):
     
     def forward(self, x):
         out_ = self.encoder(x)
-        out = self.decoder(out_)
+        out_ = self.decoder(out_)
         return out_
 
 

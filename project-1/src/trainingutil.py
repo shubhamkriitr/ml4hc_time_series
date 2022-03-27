@@ -335,7 +335,7 @@ class ExperimentPipeline(BaseExperimentPipeline):
             print(exc) # TODO: replace all prints with logger         
 
 
-class ExperimentPipelineUnetAE(ExperimentPipeline):
+class ExperimentPipelineForAutoEncoder(ExperimentPipeline):
     def __init__(self, config) -> None:
         super().__init__(config)
         self.best_loss = 100000000000
@@ -347,14 +347,37 @@ class ExperimentPipelineUnetAE(ExperimentPipeline):
         if current_epoch == 1:
             with torch.no_grad():
                 self.summary_writer.add_graph(self.model, batch_data[0])
+        
 
-        if loss < self.best_loss:
-            print(f"Saving model: best_loss changed from {self.best_loss}"
+        # N.B. it is validation loss but it uses test dataloader
+        val_loss = self.compute_and_log_evaluation_metrics(
+            model, current_epoch, "val"
+        )
+        metric_name = "Validation loss"
+        metric_value = val_loss
+
+        if metric_value < self.best_loss:
+            print(f"Saving model: {metric_name} changed from {self.best_loss}"
                   f" to {loss}")
-            self.best_loss = loss
+            self.best_loss = metric_value
             file_path = os.path.join(self.current_experiment_directory,
             "best_model.ckpt")
             torch.save(model.state_dict(), file_path)
+    
+    def compute_and_log_evaluation_metrics(self, model, current_epoch,
+        eval_type):
+        if eval_type == "val" or eval_type == "test":
+            x = self.test_loader.dataset.x
+            y_true = self.test_loader.dataset.y
+        
+        y_pred = model(x)
+        loss = self.cost_function(input=y_pred, target=y_true)
+
+        self.summary_writer.add_scalar(f"{eval_type}/loss", loss, current_epoch)
+
+        return loss
+
+
 
 class ExperimentPipelineUnetPretrained(ExperimentPipeline):
     def __init__(self, config) -> None:
@@ -441,7 +464,7 @@ class ExperimentPipelineUnetPretrained(ExperimentPipeline):
         
 PIPELINE_NAME_TO_CLASS_MAP = {
     "ExperimentPipeline": ExperimentPipeline,
-    "ExperimentPipelineUnetAE": ExperimentPipelineUnetAE,
+    "ExperimentPipelineForAutoEncoder": ExperimentPipelineForAutoEncoder,
     "ExperimentPipelineUnetPretrained": ExperimentPipelineUnetPretrained
 }
 

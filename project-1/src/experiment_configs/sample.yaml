@@ -1,4 +1,4 @@
-pipeline_class: "ExperimentPipelineUnetAE" 
+pipeline_class: "ExperimentPipelineForAutoEncoder" 
 experiment_metadata:
   description: "Trying out CNN autoencoder to learn features to be used later\
                 for classification."

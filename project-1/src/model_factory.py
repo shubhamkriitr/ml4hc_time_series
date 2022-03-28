@@ -8,7 +8,8 @@ from model_cnn_ae import (
 from model_cnn_res import (CnnWithResidualConnection,
  CnnWithResidualConnectionPTB)
 
-from model_rnn_b import RnnModelPTB, RnnModelMITBIH, RnnModelMITBIHLongerSeq
+from model_rnn_b import (RnnModelPTB, RnnModelMITBIH,
+ RnnModelMITBIHLongerSeq, VanillaRNNPTB, VanillaRNNMITBIH)
 from model_cnn_2d import (CnnModel2DMITBIH, CnnModel2DPTB)
 from model_transformer import (TransformerModelMITBIH, TransformerModelPTB)
 from model_lstm import (BidirLstmModelMITBIH, BidirLstmModelPTB)
@@ -39,7 +40,9 @@ MODEL_NAME_TO_CLASS_MAP = {
          CnnPretrainEncoderWithTrainableClassifierHeadPartiallyFrozen,
     "RnnModelMITBIHLongerSeq": RnnModelMITBIHLongerSeq,
     "BidirLstmModelMITBIH": BidirLstmModelMITBIH,
-    "BidirLstmModelPTB": BidirLstmModelPTB
+    "BidirLstmModelPTB": BidirLstmModelPTB,
+    "VanillaRNNPTB": VanillaRNNPTB,
+    "VanillaRNNMITBIH": VanillaRNNMITBIH
 
 
 }
@@ -58,13 +61,15 @@ MODEL_NAME_TO_WEIGHTS_PATH = {
     "RnnModelPTB": "saved_models/2022-03-28_084444__RnnModelPTB/best_model.ckpt",
     "RnnModelMITBIH": "saved_models/2022-03-28_174957__RnnModelMITBIH/best_model.ckpt",
     "CnnModel2DMITBIH": "saved_models/2022-03-28_215502__exp_6_a_CnnModel2DMITBIH/best_model.ckpt",
-    "CnnModel2DPTB": None,
+    "CnnModel2DPTB": "saved_models/2022-03-28_224128__CnnModel2DPTB/best_model.ckpt",
     "TransformerModelMITBIH": None,
     "TransformerModelPTB": None,
     "CnnPretrainEncoderWithTrainableClassifierHeadPartiallyFrozen": None,
     "RnnModelMITBIHLongerSeq": None,
     "BidirLstmModelMITBIH": None,
-    "BidirLstmModelPTB": None
+    "BidirLstmModelPTB": None,
+    "VanillaRNNMITBIH": None,
+    "VanillaRNNPTB": None
 
 }
 class ModelFactory(object):

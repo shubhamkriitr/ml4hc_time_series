@@ -3,6 +3,8 @@ import torch
 import torch.functional as F
 
 
+
+
 class RnnModelMITBIH (nn.Module):
     def __init__(self, config={"num_classes": 5}) -> None:
         super().__init__()
@@ -184,6 +186,23 @@ class RnnModelPTB(RnnModelMITBIH):
     
     def reshape_output(self, out_):
         return out_.squeeze()
+
+class VanillaRNNPTB(RnnModelPTB):
+    def __init__(self, config={ "num_classes": 1 }) -> None:
+        super().__init__(config)
+    
+    def _build_network(self):
+        self.bidirectional = False
+        super()._build_network()
+
+class VanillaRNNMITBIH(RnnModelMITBIH):
+    def __init__(self, config={ "num_classes": 5 }) -> None:
+        super().__init__(config)
+        self.bidirectional = False
+    
+    def _build_network(self):
+        self.bidirectional = False
+        super()._build_network()
 
 if __name__ == "__main__":
     n_batch = 3

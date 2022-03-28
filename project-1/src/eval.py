@@ -26,7 +26,12 @@ class ModelEvaluator:
     def __init__(self) -> None:
         pass
 
-    def evaluate(self, model, dataset_tag, mode):
+    def evaluate(self, model, dataset_tag, mode, count_params):
+        if count_params:
+            print(f"Total num. of trainable parameters in the model:"
+                    f" {self.count_number_of_trainable_params(model)}")
+            print(f"Total num. of  parameters in the model:"
+                    f" {self.count_number_of_params(model)}")
         
         _, val_loader, test_loader\
              = DataLoaderUtil().get_data_loaders(
@@ -75,7 +80,13 @@ class ModelEvaluator:
 
         
         print(f"{tag_}: Accuracy: {acc}, F1: {f1}")
-        
+    
+
+    def count_number_of_params(self, model):
+        return sum(p.numel() for p in model.parameters())
+    
+    def count_number_of_trainable_params(self, model):
+        return sum(p.numel() for p in model.parameters() if p.requires_grad)
         
 
 
@@ -88,6 +99,7 @@ if __name__ == "__main__":
                         required=True)
     parser.add_argument("--mode", nargs="+", type=str, required=False,
                          default=["test", "val"])
+    parser.add_argument("--count-params", action="store_true", default=False)
 
     args = parser.parse_args()
 
@@ -100,4 +112,4 @@ if __name__ == "__main__":
 
     evaluator = ModelEvaluator()
 
-    evaluator.evaluate(model, args.data, args.mode)
+    evaluator.evaluate(model, args.data, args.mode, args.count_params)

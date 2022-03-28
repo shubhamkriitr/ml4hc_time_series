@@ -37,8 +37,10 @@ class ClassWeights:
         Percentage: tensor([82.7734,  2.5384,  6.6102,  0.7324,  7.3455])
        
         PTBDB:
-
-
+        Training:
+        Classes: tensor([0., 1.])
+        Counts:  tensor([2589, 6723])
+        Percentage: tensor([27.8028, 72.1972])
         """
         frequencies = self.get_frequencies(dataloader_name)
         if weight_scheme is None:
@@ -49,6 +51,11 @@ class ClassWeights:
         if MITBIH in dataloader_name.lower():
             return torch.tensor([57977,  1778,  4630,   513,  5145],
                 dtype=torch.float32)
+        elif PTBDB in dataloader_name.lower():
+            return torch.tensor([2589, 6723], dtype=torch.float32)
+        else:
+            raise AssertionError(f"Class frequency information not available"
+            f" for the dataloader: {dataloader_name}")
     
     def get_proportions(self, dataloader_name):
         frequencies = self.get_frequencies(dataloader_name)

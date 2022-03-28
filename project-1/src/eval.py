@@ -16,12 +16,14 @@ data_choices = list(dataloader_tag_to_name.keys())
 model_choices = [
     "CnnWithResidualConnection", # This is for MITBIH
     "CnnWithResidualConnectionPTB",
-    "RnnModelPTB",
+    "RnnModelPTB", # this is bidirectional RNN
     "RnnModelMITBIH",
     "CnnModel2DMITBIH",
     "CnnModel2DPTB",
     "VanillaRNNPTB",
-    "VanillaRNNMITBIH"
+    "VanillaRNNMITBIH",
+    "VanillaCnnMITBIH",
+    "VanillaCnnPTB"
 ]
 
 

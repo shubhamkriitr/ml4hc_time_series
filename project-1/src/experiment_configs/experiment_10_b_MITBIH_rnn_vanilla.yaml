@@ -1,10 +1,10 @@
 pipeline_class: "ExperimentPipelineForClassifier" 
 experiment_metadata:
   description: "RNN on MITBIH"
-  tag: "exp_5_a_RnnModelMITBIH-not-bidir"
+  tag: "exp_10_b_VanillaRNNMITBIH"
 dataloader_class_name: "MITBIHDataLoader" #"BalancedMITBIHDataLoader"
 val_split: 0.2 # validation split ratio
-model_class_name: "RnnModelMITBIH" #"CnnEncoder" #"CnnPretrainEncoderWithTrainableClassifierHead"
+model_class_name: "VanillaRNNMITBIH" #"CnnEncoder" #"CnnPretrainEncoderWithTrainableClassifierHead"
 load_from_checkpoint: false
 checkpoint_path: ""
 cost_function_class_name: "CrossEntropyLoss"

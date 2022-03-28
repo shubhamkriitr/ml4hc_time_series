@@ -1,15 +1,15 @@
 pipeline_class: "ExperimentPipelineForClassifier" 
 experiment_metadata:
-  description: "CNN + Residual connections"
+  description: "CNN + Residual connections/ Class weighting after training wihtout it for some epochs"
   tag: "CnnWithResidualConnection"
 dataloader_class_name: "MITBIHDataLoader" #"BalancedMITBIHDataLoader"
 val_split: 0.2 # validation split ratio
 model_class_name: CnnWithResidualConnection #"CnnEncoder" #"CnnPretrainEncoderWithTrainableClassifierHead"
-load_from_checkpoint: false
-checkpoint_path: ""
+load_from_checkpoint: true
+checkpoint_path: "runs/2022-03-28_000731__CnnWithResidualConnection/best_model.ckpt" # it has 97.51 F1 on validation data
 cost_function_class_name: "CrossEntropyLoss"
 trainer_class_name: "CnnTrainer"
-num_epochs: 100
+num_epochs: 50
 batch_size: 200
 learning_rate: 0.001
 weight_decay: 0.0000001
@@ -20,3 +20,6 @@ batch_log_frequency: 150 # Print log after after these many batches
 tensorboard_log_frequency: 100 # Log scalars after these many batches
 test_batch_size: 100
 scheduler: 
+do_class_weighting: true
+class_weighting_scheme: null
+

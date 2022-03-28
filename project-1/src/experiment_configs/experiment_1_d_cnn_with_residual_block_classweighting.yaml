@@ -7,11 +7,11 @@ do_class_weighting: true
 class_weighting_scheme: null # by default inverse frequncy weighting will be used
 val_split: 0.2 # validation split ratio
 model_class_name: CnnWithResidualConnection #"CnnEncoder" #"CnnPretrainEncoderWithTrainableClassifierHead"
-load_from_checkpoint: true
-checkpoint_path: "runs/2022-03-27_220108__CnnWithResidualConnection/best_model.ckpt"
+load_from_checkpoint: false
+checkpoint_path: ""
 cost_function_class_name: "CrossEntropyLoss"
 trainer_class_name: "CnnTrainer"
-num_epochs: 70
+num_epochs: 80
 batch_size: 200
 learning_rate: 0.001
 weight_decay: 0.0000001

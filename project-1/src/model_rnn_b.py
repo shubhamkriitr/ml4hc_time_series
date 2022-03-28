@@ -15,7 +15,7 @@ class RnnModelMITBIH (nn.Module):
 
         # each of the vector passed to the RNN would have this many number
         # of elements
-        self.input_feature_chunk_size = 94
+        self.input_feature_chunk_size = 21
         self.input_original_feature_size = 187
         self.last_layer_activation = nn.Softmax(dim=1)
 
@@ -57,7 +57,7 @@ class RnnModelMITBIH (nn.Module):
         self.rnn_block_1 = nn.RNN(
             input_size=32*feature_factor,
             hidden_size=16,
-            num_layers=3,
+            num_layers=4,
             nonlinearity='relu',
             dropout=self.dropout,
             bidirectional=self.bidirectional,
@@ -67,7 +67,7 @@ class RnnModelMITBIH (nn.Module):
         self.rnn_block_2 = nn.RNN(
             input_size=16*feature_factor,
             hidden_size=16,
-            num_layers=3,
+            num_layers=4,
             nonlinearity='relu',
             dropout=self.dropout,
             bidirectional=self.bidirectional,
@@ -77,7 +77,7 @@ class RnnModelMITBIH (nn.Module):
         self.rnn_block_3 = nn.RNN(
             input_size=16*feature_factor,
             hidden_size=16,
-            num_layers=3,
+            num_layers=4,
             nonlinearity='relu',
             dropout=self.dropout,
             bidirectional=self.bidirectional,

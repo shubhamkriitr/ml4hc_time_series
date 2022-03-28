@@ -42,7 +42,7 @@ class ClassWeights:
         """
         frequencies = self.get_frequencies(dataloader_name)
         if weight_scheme is None:
-            return self.inverse_frequency_square(frequencies)
+            return self.inverse_frequency_offset_by_median(frequencies)
 
     
     def get_frequencies(self, dataloader_name):
@@ -59,6 +59,12 @@ class ClassWeights:
 
     def inverse_frequency_square(self, frequencies):
         return 1.0/(frequencies*frequencies)
+
+    def inverse_frequency_offset_by_median(self, frequencies):
+        return 1.0/(frequencies + torch.median(frequencies))
+
+    def inverse_frequency(self, frequencies):
+        return 1.0/frequencies
 
 
 

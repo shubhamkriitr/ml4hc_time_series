@@ -1,12 +1,12 @@
 pipeline_class: "ExperimentPipelineForClassifier" 
 experiment_metadata:
   description: "CnnPretrainEncoderWithTrainableClassifierHead"
-  tag: "CnnPretrainEncoderWithTrainableClassifierHead-MITBIH-FrozenEncoder-From-Scratch"
+  tag: "CnnPretrainEncoderWithTrainableClassifierHead-MITBIH-FrozenEncoder-Encoder-Frozen"
 dataloader_class_name: "BalancedMITBIHDataLoader" #"BalancedMITBIHDataLoader"
 val_split: 0.2 # validation split ratio
 model_class_name: CnnPretrainEncoderWithTrainableClassifierHead #"CnnEncoder" #"CnnPretrainEncoderWithTrainableClassifierHead"
-load_from_checkpoint: false # load the weights (pretrained somehow)
-checkpoint_path: ""
+load_from_checkpoint: true # load the weights (pretrained somehow)
+checkpoint_path: "saved_models/2022-03-27_190521__CnnEncoderDecoder_Mitbih/best_model.ckpt"
 cost_function_class_name: "CrossEntropyLoss"
 trainer_class_name: "CnnTrainer"
 num_epochs: 50

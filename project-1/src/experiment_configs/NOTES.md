@@ -39,12 +39,13 @@ CNN Resnet + Inverse Frequency offset by median weighting
 ## Experiment 4 a [on PTB]
 
 RNN Model with 21 elements fed at a time 
+(at the end of epoch 71)
 - Validation:
-  - Accuracy: 
-  - F1: 
+  - Accuracy: 98.37
+  - F1: 91.98
 - Test:
-  - Accuracy: 
-  - F1: 
+  - Accuracy: 98.23
+  - F1: 89.97
 ## Experiment 5 a [on MITBIH]
 RNN Model with 21 elements fed at a time 
 (at end of epoch 97)

@@ -26,6 +26,8 @@ class TransformerModelMITBIH(nn.Module):
         self.dropout = 0.1
         self.transformer_activation = "relu" # "relu", "gelu" or callabale
         # with one argument
+
+        self.last_layer_activation = nn.Softmax(dim=1)
         
         self._build_network()
 
@@ -76,7 +78,6 @@ class TransformerModelMITBIH(nn.Module):
             nn.ReLU(),
             nn.Dropout(p=0.1),
             nn.Linear(in_features=32, out_features=self.num_classes),
-            nn.Softmax(dim=1)
         )
 
     def forward(self, x):
@@ -94,11 +95,24 @@ class TransformerModelMITBIH(nn.Module):
         out_ = self.classification_head(out_)
         
         return out_
-
-
-def TransformerModelPTB(TransformerModelMITBIH):
-    def __init__(self, config={"num_classes": 1}) -> None:
-        super().__init__(config)
     
-    def _create_classification_head(self):
-        pass
+    def predict(self, x):
+        out_ = self.forward(x)
+        out_ = self.last_layer_activation(out_)
+        return out_
+
+
+class TransformerModelPTB(TransformerModelMITBIH):
+    def __init__(self, config={ "num_classes": 5 }) -> None:
+        super().__init__(config)
+        self.last_layer_activation = nn.Sigmoid()
+    
+    def forward(self, x):
+        out_ =  super().forward(x)
+        out_ = self.last_layer_activation(out_)
+        out_ = out_.squeeze()
+        return out_
+    
+    def predict(self, x):
+        return self.forward(x)
+    

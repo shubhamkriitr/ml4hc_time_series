@@ -57,7 +57,7 @@ MODEL_NAME_TO_WEIGHTS_PATH = {
     "CnnModel2DMITBIH": None,
     "CnnModel2DPTB": None,
     "TransformerModelMITBIH": None,
-    "TransformerModelPTB": TransformerModelPTB,
+    "TransformerModelPTB": None,
     "CnnPretrainEncoderWithTrainableClassifierHeadPartiallyFrozen": None,
     "RnnModelMITBIHLongerSeq": None
 }

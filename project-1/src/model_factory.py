@@ -47,7 +47,7 @@ MODEL_NAME_TO_WEIGHTS_PATH = {
          None,
     MODEL_CNN_ENCODER_DECODER: None,
     MODEL_CNN_ENCODER: None,
-    "CnnWithResidualConnection": None,
+    "CnnWithResidualConnection": "saved_models/2022-03-28_000731__CnnWithResidualConnection/best_model.ckpt",
     "CnnPretrainEncoderWithTrainableClassifierHeadPTB": \
         None,
     "CnnWithResidualConnectionPTB": \

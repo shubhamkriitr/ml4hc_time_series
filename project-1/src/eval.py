@@ -17,7 +17,8 @@ model_choices = [
     "CnnWithResidualConnection", # This is for MITBIH
     "CnnWithResidualConnectionPTB",
     "RnnModelPTB",
-    "RnnModelMITBIH"
+    "RnnModelMITBIH",
+    "CnnModel2DMITBIH"
 ]
 
 

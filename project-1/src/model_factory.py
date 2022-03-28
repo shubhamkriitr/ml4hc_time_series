@@ -57,7 +57,7 @@ MODEL_NAME_TO_WEIGHTS_PATH = {
         "saved_models/2022-03-28_183658__exp_2_a_CnnWithResidualConnectionPTB/best_model.ckpt",
     "RnnModelPTB": "saved_models/2022-03-28_084444__RnnModelPTB/best_model.ckpt",
     "RnnModelMITBIH": "saved_models/2022-03-28_174957__RnnModelMITBIH/best_model.ckpt",
-    "CnnModel2DMITBIH": None,
+    "CnnModel2DMITBIH": "saved_models/2022-03-28_215502__exp_6_a_CnnModel2DMITBIH/best_model.ckpt",
     "CnnModel2DPTB": None,
     "TransformerModelMITBIH": None,
     "TransformerModelPTB": None,

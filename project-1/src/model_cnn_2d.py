@@ -41,8 +41,7 @@ class CnnModel2DMITBIH(nn.Module):
             nn.Conv2d(in_channels=1, out_channels=16, kernel_size=3, stride=1),
             nn.ReLU(),
             nn.Conv2d(in_channels=16, out_channels=16, kernel_size=3, stride=1),
-            # nn.ReLU(),
-            # nn.MaxPool2d(kernel_size=2, stride=2)
+            nn.ReLU()
         )
 
         self.block_1 = nn.Sequential(
@@ -50,11 +49,12 @@ class CnnModel2DMITBIH(nn.Module):
             nn.ReLU(),
             nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, stride=1),
             nn.ReLU(),
-            # nn.MaxPool2d(kernel_size=2, stride=2)
         )
 
         self.block_2 = nn.Sequential(
-            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=1),
+            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=1, padding="same"),
+            nn.ReLU(),
+            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1),
             nn.ReLU()
         )
 

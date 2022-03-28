@@ -29,7 +29,7 @@ def plot_auroc(y_test,y_predictions, figure_save_location_prefix=None,
 
     plt.figure()
     lr_precision, lr_recall, _ = precision_recall_curve(y_test, y_predictions)
-    lr_f1, lr_auc = f1_score(y_test, y_predictions>0.5), auc(lr_recall, lr_precision)
+    lr_f1, lr_auc = f1_score(y_test, y_predictions>0.5, average="macro"), auc(lr_recall, lr_precision)
     # summarize scores
     print('Logistic: f1=%.3f auc=%.3f' % (lr_f1, lr_auc))
     # plot the precision-recall curves
@@ -37,7 +37,7 @@ def plot_auroc(y_test,y_predictions, figure_save_location_prefix=None,
     # axis labels
     pyplot.xlabel('Recall')
     pyplot.ylabel('Precision')
-    plt.title(f"ROC {plot_tag}")
+    plt.title(f"ROC {plot_tag   }")
     # show the legend
     pyplot.legend()
 

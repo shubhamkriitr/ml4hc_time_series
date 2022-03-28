@@ -14,8 +14,10 @@ dataloader_tag_to_name = {
 data_choices = list(dataloader_tag_to_name.keys())
 
 model_choices = [
-    "CnnWithResidualConnection",
-    "CnnWithResidualConnectionPTB"
+    "CnnWithResidualConnection", # This is for MITBIH
+    "CnnWithResidualConnectionPTB",
+    "RnnModelPTB",
+    "RnnModelMITBIH"
 ]
 
 
@@ -88,7 +90,12 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    model = TrainedModelFactory().get(args.model)
+    
+    lazy_model_loader = TrainedModelFactory().get_lazy_loader(args.model)
+    model = lazy_model_loader()
+    # The above two lines are equivalent to
+    # model = TrainedModelFactory().get(args.model)
+    # but model is not actually loaded until lazy_model_loader is called
 
     evaluator = ModelEvaluator()
 

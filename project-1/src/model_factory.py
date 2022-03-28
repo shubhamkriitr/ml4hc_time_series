@@ -51,9 +51,9 @@ MODEL_NAME_TO_WEIGHTS_PATH = {
     "CnnPretrainEncoderWithTrainableClassifierHeadPTB": \
         None,
     "CnnWithResidualConnectionPTB": \
-        "saved_models/2022-03-26_203707__CnnWithResidualConnectionPTB/best_model.ckpt",
-    "RnnModelPTB": None,
-    "RnnModelMITBIH": None,
+        "",
+    "RnnModelPTB": "saved_models/2022-03-28_084444__RnnModelPTB/best_model.ckpt",
+    "RnnModelMITBIH": "saved_models/2022-03-28_174957__RnnModelMITBIH/best_model.ckpt",
     "CnnModel2DMITBIH": None,
     "CnnModel2DPTB": None,
     "TransformerModelMITBIH": None,
@@ -87,6 +87,9 @@ class TrainedModelFactory(ModelFactory):
         model.load_state_dict(state_dict=state_dict, strict=True)
         # make sure to call model.eval() or model.train() based on the usage
         return model
+
+    def get_lazy_loader(self, model_name):
+        return lambda : self.get(model_name)
         
 
 if __name__ == "__main__":

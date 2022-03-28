@@ -8,7 +8,7 @@ from model_cnn_ae import (
 from model_cnn_res import (CnnWithResidualConnection,
  CnnWithResidualConnectionPTB)
 
-from model_rnn_b import RnnModelPTB, RnnModelMITBIH
+from model_rnn_b import RnnModelPTB, RnnModelMITBIH, RnnModelMITBIHLongerSeq
 from model_cnn_2d import (CnnModel2DMITBIH)
 from model_transformer import (TransformerModelMITBIH, TransformerModelPTB)
 
@@ -34,7 +34,9 @@ MODEL_NAME_TO_CLASS_MAP = {
     "CnnModel2DMITBIH": CnnModel2DMITBIH,
     "TransformerModelMITBIH": TransformerModelMITBIH,
     "TransformerModelPTB": TransformerModelPTB,
-    "CnnPretrainEncoderWithTrainableClassifierHeadPartiallyFrozen": CnnPretrainEncoderWithTrainableClassifierHeadPartiallyFrozen
+    "CnnPretrainEncoderWithTrainableClassifierHeadPartiallyFrozen":\
+         CnnPretrainEncoderWithTrainableClassifierHeadPartiallyFrozen,
+    "RnnModelMITBIHLongerSeq": RnnModelMITBIHLongerSeq
 
 }
 
@@ -54,7 +56,8 @@ MODEL_NAME_TO_WEIGHTS_PATH = {
     "CnnModel2DMITBIH": None,
     "TransformerModelMITBIH": None,
     "TransformerModelPTB": TransformerModelPTB,
-    "CnnPretrainEncoderWithTrainableClassifierHeadPartiallyFrozen": None
+    "CnnPretrainEncoderWithTrainableClassifierHeadPartiallyFrozen": None,
+    "RnnModelMITBIHLongerSeq": None
 }
 class ModelFactory(object):
     def get(self, model_name):

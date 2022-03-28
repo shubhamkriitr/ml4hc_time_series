@@ -9,8 +9,8 @@ load_from_checkpoint: false
 checkpoint_path: ""
 cost_function_class_name: "CrossEntropyLoss"
 trainer_class_name: "CnnTrainer"
-num_epochs: 50
-batch_size: 32
+num_epochs: 100
+batch_size: 100
 learning_rate: 0.001
 weight_decay: 0.0000001
 logdir: "runs"

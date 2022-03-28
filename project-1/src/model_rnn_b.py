@@ -156,7 +156,15 @@ class RnnModelMITBIH (nn.Module):
         # shape does not need to changed for this
         return out_
     
+
+class RnnModelMITBIHLongerSeq(RnnModelMITBIH):
+    def __init__(self, config={ "num_classes": 5 }) -> None:
+        super().__init__(config)
     
+    def _compute_and_initialize_sequence_length_and_padding(self):
+        # override self.input_feature_chunk_size to adjust seq len
+        self.input_feature_chunk_size = 4
+        return super()._compute_and_initialize_sequence_length_and_padding()
 
 class RnnModelPTB(RnnModelMITBIH):
     def __init__(self, config={ "num_classes": 1 }) -> None:

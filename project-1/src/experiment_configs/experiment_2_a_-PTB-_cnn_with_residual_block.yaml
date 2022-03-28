@@ -1,7 +1,7 @@
 pipeline_class: "ExperimentPipelineForClassifier" 
 experiment_metadata:
   description: "CNN + Residual connections applied to PTB dataset"
-  tag: "CnnWithResidualConnection[PTB]"
+  tag: "exp_2_a_CnnWithResidualConnection[PTB]"
 dataloader_class_name: "PTBDataLoader" #"BalancedMITBIHDataLoader"
 val_split: 0.2 # validation split ratio
 model_class_name: CnnWithResidualConnectionPTB #"CnnEncoder" #"CnnPretrainEncoderWithTrainableClassifierHead"
@@ -9,7 +9,7 @@ load_from_checkpoint: false
 checkpoint_path: ""
 cost_function_class_name: "BCELoss"
 trainer_class_name: "CnnTrainer"
-num_epochs: 60
+num_epochs: 100
 batch_size: 100
 learning_rate: 0.001
 weight_decay: 0.0000001

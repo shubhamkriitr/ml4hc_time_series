@@ -9,7 +9,7 @@ from model_cnn_res import (CnnWithResidualConnection,
  CnnWithResidualConnectionPTB)
 
 from model_rnn_b import RnnModelPTB, RnnModelMITBIH, RnnModelMITBIHLongerSeq
-from model_cnn_2d import (CnnModel2DMITBIH)
+from model_cnn_2d import (CnnModel2DMITBIH, CnnModel2DPTB)
 from model_transformer import (TransformerModelMITBIH, TransformerModelPTB)
 
 
@@ -32,6 +32,7 @@ MODEL_NAME_TO_CLASS_MAP = {
     "RnnModelPTB": RnnModelPTB,
     "RnnModelMITBIH": RnnModelMITBIH,
     "CnnModel2DMITBIH": CnnModel2DMITBIH,
+    "CnnModel2DPTB": CnnModel2DPTB,
     "TransformerModelMITBIH": TransformerModelMITBIH,
     "TransformerModelPTB": TransformerModelPTB,
     "CnnPretrainEncoderWithTrainableClassifierHeadPartiallyFrozen":\
@@ -54,6 +55,7 @@ MODEL_NAME_TO_WEIGHTS_PATH = {
     "RnnModelPTB": None,
     "RnnModelMITBIH": None,
     "CnnModel2DMITBIH": None,
+    "CnnModel2DPTB": None,
     "TransformerModelMITBIH": None,
     "TransformerModelPTB": TransformerModelPTB,
     "CnnPretrainEncoderWithTrainableClassifierHeadPartiallyFrozen": None,

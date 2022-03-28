@@ -31,6 +31,7 @@ class CnnModel2DMITBIH(nn.Module):
         self.width = (self.input_feature_count+self.pad_size_before_reshape)//\
             self.height
         self.num_classes = config["num_classes"]
+        self.last_layer_activation = nn.Softmax(dim=1)
         
         self._build_network()
 
@@ -70,8 +71,13 @@ class CnnModel2DMITBIH(nn.Module):
             nn.Linear(in_features=64, out_features=32),
             nn.ReLU(),
             nn.Linear(in_features=32, out_features=self.num_classes),
-            nn.Softmax(dim=1)
+            
         )
+    
+    def predict(self, x):
+        out_ = self.forward(x)
+        out_ = self.last_layer_activation(out_)
+        return out_
 
     def forward(self, x):
         out_ = torch.reshape(x, (x.shape[0], 1, self.height, self.width))
@@ -84,3 +90,18 @@ class CnnModel2DMITBIH(nn.Module):
 
         return out_
 
+class CnnModel2DPTB(CnnModel2DMITBIH):
+    def __init__(self, config={ "num_classes": 1 }) -> None:
+        super().__init__(config)
+        self.last_layer_activation = nn.Sigmoid()
+    
+    def forward(self, x):
+        out_ =  super().forward(x)
+        out_ = self.last_layer_activation(out_)
+        out_ = out_.squeeze()
+        return out_
+    
+    def predict(self, x):
+        return self.forward(x)
+    
+    

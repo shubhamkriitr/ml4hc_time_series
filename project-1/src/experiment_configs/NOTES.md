@@ -36,6 +36,16 @@ CNN Resnet + Inverse Frequency offset by median weighting
   - Accuracy: 
   - F1: 
 
+## Experiment 2 a [on PTB]
+CNN + Residual Connection
+(at the end of epoch 95)
+- Validation:
+  - Accuracy: 99.79
+  - F1: 99.73
+- Test:
+  - Accuracy: 99.59
+  - F1: 99.49
+
 ## Experiment 4 a [on PTB]
 
 RNN Model with 21 elements fed at a time 

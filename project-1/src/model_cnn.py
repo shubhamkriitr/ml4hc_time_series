@@ -43,17 +43,22 @@ class VanillaCnnPTB(nn.Module):
             nn.ReLU(),
             nn.Conv1d(in_channels=64, out_channels=64, kernel_size=3, stride=1, padding='same'),
             nn.ReLU(),
+            GlobalMaxPooling(dims=(2))
+            
+            
+        )
+        self.classifier_head = nn.Sequential(
             nn.Flatten(),
             nn.Linear(in_features=64, out_features=64),
             nn.ReLU(),
             nn.Linear(in_features=64, out_features=64),
             nn.ReLU(),
             nn.Linear(in_features=64, out_features=self.num_classes)
-            
         )
 
     def forward(self, x):
         out_ = self.layers(x)
+        out_  = self.classifier_head(out_)
         out_ = self.classification_activation_layer(out_)
         out_ = out_.squeeze()
         return out_
@@ -68,6 +73,7 @@ class VanillaCnnMITBIH(VanillaCnnPTB):
 
     def forward(self, x):
         out_ = self.layers(x)
+        out_  = self.classifier_head(out_)
         return out_ # return just logits
     
     def predict(self, x):

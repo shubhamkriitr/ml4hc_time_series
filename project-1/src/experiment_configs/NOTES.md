@@ -46,26 +46,30 @@ CNN + Residual Connection
   - Accuracy: 99.59
   - F1: 99.49
 
-## Experiment 4 a [on PTB]
+  ## Experiment 4 a [on PTB]
 
-RNN Model with 21 elements fed at a time 
-(at the end of epoch 71)
-- Validation:
-  - Accuracy: 98.37
-  - F1: 91.98
-- Test:
-  - Accuracy: 98.23
-  - F1: 89.97
-## Experiment 5 a [on MITBIH]
-RNN Model with 21 elements fed at a time 
-(at end of epoch 97)
+  RNN Model with 21 elements fed at a time 
+  (at the end of epoch 71)
+  - Validation:
+    - Accuracy: 98.37
+    - F1: 91.98
+  - Test:
+    - Accuracy: 98.23
+    - F1: 89.97
+  ## Experiment 5 a [on MITBIH]
+  RNN Model with 21 elements fed at a time 
+  (at end of epoch 97)
 
-- Validation:
-  - Accuracy: 97.94
-  - F1: 97.43
-- Test:
-  - Accuracy: 9.77
-  - F1: 97.22
+  - Validation:
+    - Accuracy: 97.94
+    - F1: 97.43
+  - Test:
+    - Accuracy: 9.77
+    - F1: 97.22
+
+
+## Experiment 7 a [on MITBIH]
+Transformers
 
 # Set - 2
 

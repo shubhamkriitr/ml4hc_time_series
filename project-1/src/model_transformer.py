@@ -59,14 +59,14 @@ class TransformerModelMITBIH(nn.Module):
             batch_first=True
         )
 
-        # self.encoder_layer_3 = nn.TransformerEncoderLayer(
-        #     d_model=1,
-        #     nhead=1,
-        #     dim_feedforward=self.dim_feedforward,
-        #     activation=self.transformer_activation,
-        #     dropout=self.dropout,
-        #     batch_first=True
-        # )
+        self.encoder_layer_3 = nn.TransformerEncoderLayer(
+            d_model=1,
+            nhead=1,
+            dim_feedforward=self.dim_feedforward,
+            activation=self.transformer_activation,
+            dropout=self.dropout,
+            batch_first=True
+        )
 
         self.classification_head = self._create_classification_head()
 
@@ -87,7 +87,7 @@ class TransformerModelMITBIH(nn.Module):
         out_ = self.encoder_layer_0(out_)
         out_ = self.encoder_layer_1(out_)
         out_ = self.encoder_layer_2(out_)
-        # out_ = self.encoder_layer_3(out_)
+        out_ = self.encoder_layer_3(out_)
 
 
         out_ = torch.permute(out_, (0, 2, 1))

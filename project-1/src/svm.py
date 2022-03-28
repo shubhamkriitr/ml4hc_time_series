@@ -10,6 +10,7 @@ import pickle
 import numpy as np
 from argparse import ArgumentParser
 import time
+import matplotlib.pyplot as plt
 
 dataloader_d = {
     MITBIH: MITBIHDataLoader,
@@ -93,8 +94,19 @@ def run(dataset, iters, jobs):
     acc = accuracy_score(y_test, y_pred)
     print("Test accuracy score : %s "% acc)
 
-def test_sample_rates(dataset, iters, model_path):
-    model_params = None
+def plot_f1_acc_samples(n, f1, acc, out):
+    fig, ax1 = plt.subplots()
+    ax1.set_ylabel("f1 score")
+    l1, = ax1.plot(n, f1)
+    ax2 = ax1.twinx()
+    l2, = plt.plot(n, acc, color="orange")
+    ax1.set_xlabel("Max samples per class")
+    ax2.set_ylabel("accuracy")
+    ax1.legend([l1,l2],["f1","accuracy"])
+    plt.tight_layout()
+    plt.savefig(out)
+
+def load_params(model_path):
     if model_path == None:
         print('Training default SVC')
         model_params = {}
@@ -103,6 +115,10 @@ def test_sample_rates(dataset, iters, model_path):
         model_example = pickle.load(open(model_path, 'rb'))
         model_params = model_example.best_estimator_.get_params()
         print('Params', model_params)
+    return model_params
+
+def test_sample_rates(dataset, iters, model_path):
+    model_params = load_params(model_path)
     model_params['random_state'] = 0
     dataloader = dataloader_d[dataset]()
     x_train, y_train, x_test, y_test = dataloader.load_data()
@@ -136,9 +152,12 @@ def test_sample_rates(dataset, iters, model_path):
         acc_log.append(acc)
         time_log.append(total_time)
         print(f'Trained with max {n}. f1 {f1}. Accuracy {acc}. Time {total_time}s')
+    
+    max_samples = list(map(int,np.linspace(start, stop, iters)))
+    plot_f1_acc_samples(max_samples, f1_log, acc_log, "sample_svm_%s.jpeg" % get_timestamp_str())
 
     data = pd.DataFrame({
-        'n': map(int,np.linspace(start, stop, iters)),
+        'n': max_samples,
         'f1_test': f1_log,
         'acc_test': acc_log,
         'time_train': time_log

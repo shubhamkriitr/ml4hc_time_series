@@ -68,8 +68,8 @@ MODEL_NAME_TO_WEIGHTS_PATH = {
     "RnnModelMITBIHLongerSeq": None,
     "BidirLstmModelMITBIH": None,
     "BidirLstmModelPTB": None,
-    "VanillaRNNMITBIH": None,
-    "VanillaRNNPTB": None
+    "VanillaRNNMITBIH": "saved_models/2022-03-28_235015__exp_10_b_VanillaRNNMITBIH/best_model.ckpt",
+    "VanillaRNNPTB": "saved_models/2022-03-28_234942__exp_10_a_VanillaRNNPTB/best_model.ckpt"
 
 }
 class ModelFactory(object):

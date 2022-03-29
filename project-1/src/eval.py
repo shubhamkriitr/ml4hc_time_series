@@ -24,7 +24,8 @@ model_choices = [
     "VanillaRNNMITBIH",
     "VanillaCnnMITBIH",
     "VanillaCnnPTB",
-    "CnnWithResidualConnectionTransferMitbihToPtb"
+    "CnnWithResidualConnectionTransferMitbihToPtb",
+    "CnnWithResidualConnectionTransferMitbihToPtbFrozen"
 ]
 
 

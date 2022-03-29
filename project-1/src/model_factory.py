@@ -82,7 +82,7 @@ MODEL_NAME_TO_WEIGHTS_PATH = {
     "VanillaCnnPTB": "saved_models/2022-03-29_014835__exp_0_b_VanillaCnnPTB/best_model.ckpt",
     "VanillaCnnMITBIH": "saved_models/2022-03-29_012323__exp_0_a_VanillaCnnMITBIH/best_model.ckpt",
     "CnnWithResidualConnectionTransferMitbihToPtb": "saved_models/2022-03-29_202045__exp_11_a_CnnWithResidualConnectionTransferMitbihToPtb/best_model.ckpt",
-    "CnnWithResidualConnectionTransferMitbihToPtbFrozen": None
+    "CnnWithResidualConnectionTransferMitbihToPtbFrozen": "saved_models/2022-03-29_201122__exp_11_c_CnnWithResidualConnectionTransferMitbihToPtbFrozen/best_model.ckpt"
 
 }
 class ModelFactory(object):

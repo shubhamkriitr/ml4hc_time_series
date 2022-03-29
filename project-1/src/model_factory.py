@@ -74,8 +74,8 @@ MODEL_NAME_TO_WEIGHTS_PATH = {
     "BidirLstmModelPTB": None,
     "VanillaRNNMITBIH": "saved_models/2022-03-28_235015__exp_10_b_VanillaRNNMITBIH/best_model.ckpt",
     "VanillaRNNPTB": "saved_models/2022-03-28_234942__exp_10_a_VanillaRNNPTB/best_model.ckpt",
-    "VanillaCnnPTB": None,
-    "VanillaCnnMITBIH": None
+    "VanillaCnnPTB": "saved_models/2022-03-29_014835__exp_0_b_VanillaCnnPTB/best_model.ckpt",
+    "VanillaCnnMITBIH": "saved_models/2022-03-29_012323__exp_0_a_VanillaCnnMITBIH/best_model.ckpt"
 
 }
 class ModelFactory(object):

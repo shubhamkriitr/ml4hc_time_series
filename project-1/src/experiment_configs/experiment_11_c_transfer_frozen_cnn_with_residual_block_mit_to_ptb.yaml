@@ -1,0 +1,24 @@
+pipeline_class: "ExperimentPipelineForClassifier" 
+experiment_metadata:
+  description: "Transfer Learning , but this time we freeze the shared pretrained weights (100 epochs)"
+  tag: "exp_11_c_CnnWithResidualConnectionTransferMitbihToPtbFrozen"
+dataloader_class_name: "PTBDataLoader" #"BalancedMITBIHDataLoader"
+val_split: 0.2 # validation split ratio
+model_class_name: CnnWithResidualConnectionTransferMitbihToPtbFrozen #"CnnEncoder" #"CnnPretrainEncoderWithTrainableClassifierHead"
+load_from_checkpoint: true
+checkpoint_path: "saved_models/2022-03-28_000731__CnnWithResidualConnection/best_model.ckpt"
+cost_function_class_name: "BCELoss"
+trainer_class_name: "CnnTrainer"
+num_epochs: 100
+batch_size: 100
+learning_rate: 0.001
+weight_decay: 0.0000001
+logdir: "runs"
+test_batch_frequency: 500 # evaluate performance metrics on test data
+#after these many batches have been processed
+batch_log_frequency: 1 # Print log after after these many batches
+tensorboard_log_frequency: 100 # Log scalars after these many batches
+test_batch_size: 100
+scheduler: 
+task_type: "binary_classification"
+generate_roc_curves: true

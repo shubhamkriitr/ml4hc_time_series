@@ -31,7 +31,7 @@ We experimented with different models and all of them can be found in these
 files (however we have mentioned only the relevant ones in the report.)
 
 - `data_loader.py` contains dataloaders for the two datasets and some extensions
-thereof, to provide support for loading , splitting the subsampling the data.
+thereof, to provide support for loading , splitting and subsampling the data.
 
 - `trainingutil.py` : This contains the trainer (`#TODO`) classes to abstract
 training loop and experiment pipeline classes 
@@ -39,9 +39,9 @@ training loop and experiment pipeline classes
 optimizer & cost_function iniatilazion _etc._ and provide and interface to 
 run the training based on a single configuration file (refer below).
 
-# How to Run?
+# How to run training?
 
-## For PyTorch based Models:
+## For PyTorch based Deep Learning Models:
 
 - N.B. Most of our models are implemented in PyTorch and the steps below
 apply to all such models
@@ -70,13 +70,49 @@ _e.g._ : `2022-03-29_014835__exp_0_b_VanillaCnnPTB`
 - the best model will be saved  if the validation F1 has increased when
   compared to the last best F1
 
-> Steps for evaluating saved model:
-
-----------------------------
 
 
+## How to run evaluation?
+
+- `eval.py` is the script for running evaluations
+- We have kept the models we trained in the `src/saved_models/` directory
+  - These models may be used for evaluation or you can give path to your own
+  model
+
+The command to run is as follows:
 
 ```
-python eval.py --model VanillaCnnMITBIH --data mitbih --count-params
-python eval.py --model VanillaCnnPTB --data ptbdb --count-params
+python eval.py --model <model_class_name> --data <dataset_name>
 ```
+This will use the model  with class name `model_class_name` and select the
+dataset based on the `dataset_name` from **saved_models**
+e.g. 
+- ```
+  python eval.py --model VanillaCnnMITBIH --data mitbih
+  ```
+- ```
+  python eval.py --model VanillaCnnPTB --data ptbdb
+  ```
+
+In case you wish to use the model trained by you. You may specify the model
+path using `--model-path` like in the example below
+
+- ```
+  python eval.py --model CnnModel2DPTB --data ptbdb --model-path "runs/2022-03-28_224128__CnnModel2DPTB/best_model.ckpt"
+  ```
+
+The following is a list of Models you can try:
+
+|**Model Class Name**| **Model Description**|**Dataset Name to Use**|
+|--------------------|---------------------|----------------------|
+|`VanillaCnnPTB` | Vanilla CNN Model for PTBDB Dataset (Binary classification)| `ptbdb` |
+|`VanillaCnnMITBIH`| Vanilla CNN model for MITBIH dataset (5 Class classification)| `mitbih` |
+|`VanillaRNNPTB`| RNN Model for PTBDB | `ptbdb` |
+|`VanillaRNNMITBIH`| RNN Model for MITBIH | `mitbih` |
+|`RnnModelPTB`| Bidirectional RNN for PTBDB| `ptbdb` |
+|`RnnModelMITBIH`| Bidirectional RNN for MITBIH| `mitbih` |
+|`CnnWithResidualConnectionPTB`| CNN with residual blocks (for PTBDB dataset) | `ptbdb` |
+|`CnnWithResidualConnection`|CNN with residual blocks (for MITBIH dataset) | `mitbih` |
+|`CnnModel2DPTB`|2D-CNN model for PTBDB | `ptbdb` |
+|`CnnModel2DMITBIH` |2D-CNN model for MITBIH | `mitbih` |
+

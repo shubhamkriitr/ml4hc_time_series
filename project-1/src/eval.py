@@ -23,7 +23,8 @@ model_choices = [
     "VanillaRNNPTB",
     "VanillaRNNMITBIH",
     "VanillaCnnMITBIH",
-    "VanillaCnnPTB"
+    "VanillaCnnPTB",
+    "CnnWithResidualConnectionTransferMitbihToPtb"
 ]
 
 

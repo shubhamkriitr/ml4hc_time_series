@@ -214,6 +214,9 @@ class CnnWithResidualConnectionTransferMitbihToPtb(CnnWithResidualConnectionPTB)
                 new_state_dict[name] = weight
                 
         super().load_state_dict(new_state_dict, strict=strict)
+    
+    def load_state_dict_for_eval(self, state_dict, strict=False):
+        super().load_state_dict(state_dict, strict=strict)
 
 class CnnWithResidualConnectionTransferMitbihToPtbFrozen(CnnWithResidualConnectionPTB):
     def __init__(self, config={ "num_classes": 1 }, *args, **kwargs) -> None:
@@ -232,6 +235,9 @@ class CnnWithResidualConnectionTransferMitbihToPtbFrozen(CnnWithResidualConnecti
                 param.requires_grad = False 
                 
         super().load_state_dict(new_state_dict, strict=strict)
+    
+    def load_state_dict_for_eval(self, state_dict, strict=False):
+        super().load_state_dict(state_dict, strict=strict)
 
         
 

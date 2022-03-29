@@ -81,7 +81,7 @@ MODEL_NAME_TO_WEIGHTS_PATH = {
     "VanillaRNNPTB": "saved_models/2022-03-28_234942__exp_10_a_VanillaRNNPTB/best_model.ckpt",
     "VanillaCnnPTB": "saved_models/2022-03-29_014835__exp_0_b_VanillaCnnPTB/best_model.ckpt",
     "VanillaCnnMITBIH": "saved_models/2022-03-29_012323__exp_0_a_VanillaCnnMITBIH/best_model.ckpt",
-    "CnnWithResidualConnectionTransferMitbihToPtb": None,
+    "CnnWithResidualConnectionTransferMitbihToPtb": "saved_models/2022-03-29_202045__exp_11_a_CnnWithResidualConnectionTransferMitbihToPtb/best_model.ckpt",
     "CnnWithResidualConnectionTransferMitbihToPtbFrozen": None
 
 }
@@ -108,7 +108,10 @@ class TrainedModelFactory(ModelFactory):
         model: torch.nn.Module = model_class() # Assumes model does not need init params
 
         state_dict = torch.load(model_weights_path)
-        model.load_state_dict(state_dict=state_dict, strict=True)
+        if hasattr(model, "load_state_dict_for_eval"):
+            model.load_state_dict_for_eval(state_dict=state_dict, strict=True)
+        else:
+            model.load_state_dict(state_dict=state_dict, strict=True)
         # make sure to call model.eval() or model.train() based on the usage
         return model
 
@@ -121,7 +124,10 @@ class TrainedModelFactory(ModelFactory):
         model: torch.nn.Module = model_class() # Assumes model does not need init params
 
         state_dict = torch.load(model_weights_path)
-        model.load_state_dict(state_dict=state_dict, strict=True)
+        if hasattr(model, "load_state_dict_for_eval"):
+            model.load_state_dict_for_eval(state_dict=state_dict, strict=True)
+        else:
+            model.load_state_dict(state_dict=state_dict, strict=True)
         # make sure to call model.eval() or model.train() based on the usage
         return model
         

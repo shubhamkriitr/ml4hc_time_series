@@ -102,7 +102,7 @@ run the training based on a single configuration file (refer below).
 ## For SVM models
 In order to train SVM models you can call:
 
-    python src/svm.py train [mitbih|ptbdb] [OPTIONS] 
+    python svm.py train [mitbih|ptbdb] [OPTIONS] 
 
 specifying the dataset over which to train the model.
 Running the script will train several SVMs with different hyperparameter selections, and
@@ -166,7 +166,7 @@ above mentioned are the ones we included in our report.
 
 In order to train the bagging SVM ensemble you can run:
 
-    python src/ensemble.py svm [OPTIONS] 
+    python ensemble.py svm [OPTIONS] 
 
 where the following options are offered:
 - -samples: number of samples to be used to train each bagging classifier
@@ -236,7 +236,7 @@ which will print the performance of several ensembles.
 In order to generate plots with the performance of an SVM model with respect to
 different downsampling rates over the training data, run:
 
-    python src/svm.py samples [mitbih|ptbdb] -model MODEL_PATH -iter N
+    python svm.py samples [mitbih|ptbdb] -model MODEL_PATH -iter N
 
 indicating the path of a saved SVM model from which to take the hyperparameters (or use a default SVM if not indicated), and the number `N`
 of equally spaced maximum number of samples per class to use from the

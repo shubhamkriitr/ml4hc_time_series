@@ -16,7 +16,7 @@ Scores on test Data:: Accuracy: 0.9958777052559258, F1: 0.9948527374854859
 auc-roc:  0.9976518919529226
 Logistic: f1=0.995 auc_prc=0.999
 
-# Set - 1 (New) Shubham
+# Set - 1
 
 ## Experiment 0 a
 python eval.py --model VanillaCnnMITBIH --data mitbih --count-params

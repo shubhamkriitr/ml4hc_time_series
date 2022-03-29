@@ -1,21 +1,34 @@
 # Set - 1
 
 ## Experiment 1 -MITBIH
+python eval.py --model CnnWithResidualConnection --data mitbih --count-params
 
-At the end of 50th epoch
-  Val F1: 92.04
- Val acc: 98.5
- Test F1: 90.07
-Test acc: 98.35
+Scores on test Data:: Accuracy: 0.9866617942627444, F1: 0.9229576310626472
+
+
+
 
 ## Experiment 2 a [PTB]
-Best Values:
-Val F1: 99.46
-Val Acc: 99.57
-test F1: 99.23
-test acc: 99.38
+
+
+python eval.py --model CnnWithResidualConnectionPTB --data ptbdb --count-params
+Scores on test Data:: Accuracy: 0.9958777052559258, F1: 0.9948527374854859
+auc-roc:  0.9976518919529226
+Logistic: f1=0.995 auc_prc=0.999
 
 # Set - 1 (New) Shubham
+
+## Experiment 0 a
+python eval.py --model VanillaCnnMITBIH --data mitbih --count-params
+Scores on test Data:: Accuracy: 0.9808605883427736, F1: 0.8985743451164183
+
+## Experiment 0 b
+python eval.py --model VanillaCnnPTB --data ptbdb --count-params
+Scores on test Data:: Accuracy: 0.9769838543455857, F1: 0.9709807177413295
+auc-roc:  0.9928951060794416
+Logistic: f1=0.971 auc_prc=0.996
+
+
 
 ## Experiment 1 a
 
@@ -48,24 +61,23 @@ CNN + Residual Connection
 
 ## Experiment 4 a [on PTB]
 
-RNN Model with 21 elements fed at a time 
+Bidirectional RNN Model with 21 elements fed at a time 
 (at the end of epoch 71)
-- Validation:
-  - Accuracy: 98.37
-  - F1: 91.98
-- Test:
-  - Accuracy: 98.23
-  - F1: 89.97
-## Experiment 5 a [on MITBIH]
-RNN Model with 21 elements fed at a time 
-(at end of epoch 97)
+python eval.py --model RnnModelPTB --data ptbdb --count-params
+Scores on test Data:: Accuracy: 0.9776709034695981, F1: 0.9721509411190695
+auc-roc:  0.9939553712457029
+Logistic: f1=0.972 auc_prc=0.997
 
-- Validation:
-  - Accuracy: 97.94
-  - F1: 97.43
-- Test:
-  - Accuracy: 9.77
-  - F1: 97.22
+
+## Experiment 5 a [on MITBIH]
+Bidirectional RNN Model with 21 elements fed at a time 
+(at end of epoch 97)
+ python eval.py --model RnnModelMITBIH --data mitbih --count-params
+
+Scores on test Data:: Accuracy: 0.9823223095194592, F1: 0.8996577428600924
+
+
+
 
 
 ## Experiment 6a
@@ -82,8 +94,16 @@ Logistic: f1=0.977 auc=0.998
 Scores on validation data:: Accuracy: 0.9832546157148991, F1: 0.9791436906512732
 Logistic: f1=0.979 auc=0.998
 
-## Experiment 7 a [on MITBIH]
-Transformers
+## Experiment 10 a
+python eval.py --model VanillaRNNPTB --data ptbdb --count-params
+Scores on test Data:: Accuracy: 0.9766403297835795, F1: 0.9706741618310768
+auc-roc:  0.9932679336531575
+Logistic: f1=0.971 auc_prc=0.997
+
+## Experiment 10 b
+python eval.py --model VanillaRNNMITBIH --data mitbih --count-params
+Scores on test Data:: Accuracy: 0.9791247944454595, F1: 0.8901759009266896
+
 
 # Set - 2
 

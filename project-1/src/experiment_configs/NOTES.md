@@ -18,6 +18,18 @@ Logistic: f1=0.995 auc_prc=0.999
 
 # Set - 1 (New) Shubham
 
+## Experiment 0 a
+python eval.py --model VanillaCnnMITBIH --data mitbih --count-params
+Scores on test Data:: Accuracy: 0.9808605883427736, F1: 0.8985743451164183
+
+## Experiment 0 b
+python eval.py --model VanillaCnnPTB --data ptbdb --count-params
+Scores on test Data:: Accuracy: 0.9769838543455857, F1: 0.9709807177413295
+auc-roc:  0.9928951060794416
+Logistic: f1=0.971 auc_prc=0.996
+
+
+
 ## Experiment 1 a
 
 CNN Resnet 100 epochs

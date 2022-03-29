@@ -70,3 +70,11 @@ _e.g._ : `2022-03-29_014835__exp_0_b_VanillaCnnPTB`
 
 > Steps for evaluating saved model:
 
+----------------------------
+
+
+
+```
+python eval.py --model VanillaCnnMITBIH --data mitbih --count-params
+python eval.py --model VanillaCnnPTB --data ptbdb --count-params
+```

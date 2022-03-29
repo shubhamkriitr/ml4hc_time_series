@@ -135,7 +135,7 @@ class BaseExperimentPipeline(object):
 # dictionary to refer to class by name
 # (to be used in config)
 TRAINER_NAME_TO_CLASS_MAP = {
-    "CnnTrainer": CnnTrainer
+    "CnnTrainer": CnnTrainer # it is generic enough to be used by all of the networks we experimented with
 }
 
 # Factory class to get trainer class by name

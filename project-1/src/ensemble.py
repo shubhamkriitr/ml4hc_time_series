@@ -93,7 +93,7 @@ def train_sklearn_ensemble(dataset, method, n_estimators, max_samples, n_jobs, m
     acc = accuracy_score(y_test, y_pred)
     print("Test accuracy score : %s "% acc)
     if dataset == PTBDB:
-        prob = ensemble.predict_proba(x_test)
+        prob = ensemble.predict_proba(x_test)[:,1]
         false_pos , true_pos , _ = roc_curve (y_test, prob)
         auc_roc = auc(false_pos, true_pos)
         precision, recall, _ = precision_recall_curve(y_test, prob)

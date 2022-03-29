@@ -105,6 +105,10 @@ In order to train SVM models you can call:
     python svm.py train [mitbih|ptbdb] [OPTIONS] 
 
 specifying the dataset over which to train the model.
+_For Example:_
+```
+python svm.py train ptbdb -iter 4
+```
 Running the script will train several SVMs with different hyperparameter selections, and
 output test metrics for the SVM that performed better in F1 score
 over cross validation. The script offers as options:
@@ -231,6 +235,11 @@ In order to test different combinations of NN ensembles using our trained models
 
 which will print the performance of several ensembles.
 
+For example:
+```
+python ensemble.py svm ptbdb -modelpath saved_models/svm_ptb_best.pickle -samples 6000 -models 4
+```
+
 ## Generating plots for data subsample:
 
 In order to generate plots with the performance of an SVM model with respect to
@@ -244,6 +253,10 @@ training data.
 
 The plot will be generated in a .jpeg in the current directory (e.g. `sample_svm_2022-03-29_154116_.jpeg`) along with a csv file with the f1 score, accuracy, and training time for each number of samples used (e.g. `sample_svm_2022-03-29_154116__stats.csv`).
 
-# Appendix
+For example:
+```
+python svm.py samples ptbdb -model saved_models/svm_ptb_best.pickle -iter 5
+```
+
 
 

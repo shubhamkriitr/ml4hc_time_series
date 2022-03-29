@@ -215,6 +215,24 @@ class CnnWithResidualConnectionTransferMitbihToPtb(CnnWithResidualConnectionPTB)
                 
         super().load_state_dict(new_state_dict, strict=strict)
 
+class CnnWithResidualConnectionTransferMitbihToPtbFrozen(CnnWithResidualConnectionPTB):
+    def __init__(self, config={ "num_classes": 1 }, *args, **kwargs) -> None:
+        super().__init__(config, *args, **kwargs)
+    
+    def load_state_dict(self, state_dict, strict=False):
+        new_state_dict = {}
+        # filtering state dict to remove last layers:
+        for name, weight in state_dict.items():
+            if not name.startswith("fc_block"):
+                new_state_dict[name] = weight
+        
+        # all weights are frozen except for the classification fc_block
+        for name, param in self.named_parameters():
+            if not name.startswith("fc_block") :
+                param.requires_grad = False 
+                
+        super().load_state_dict(new_state_dict, strict=strict)
+
         
 
 class ResidualBlock(nn.Module):

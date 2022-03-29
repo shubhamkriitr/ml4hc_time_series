@@ -8,7 +8,8 @@ from model_cnn_ae import (
  )
 
 from model_cnn_res import (CnnWithResidualConnection,
- CnnWithResidualConnectionPTB, CnnWithResidualConnectionTransferMitbihToPtb)
+ CnnWithResidualConnectionPTB, CnnWithResidualConnectionTransferMitbihToPtb,
+ CnnWithResidualConnectionTransferMitbihToPtbFrozen)
 
 from model_rnn_b import (RnnModelPTB, RnnModelMITBIH,
  RnnModelMITBIHLongerSeq, VanillaRNNPTB, VanillaRNNMITBIH)
@@ -48,7 +49,9 @@ MODEL_NAME_TO_CLASS_MAP = {
     "VanillaCnnPTB": VanillaCnnPTB,
     "VanillaCnnMITBIH": VanillaCnnMITBIH,
     "CnnWithResidualConnectionTransferMitbihToPtb":\
-        CnnWithResidualConnectionTransferMitbihToPtb
+        CnnWithResidualConnectionTransferMitbihToPtb,
+    "CnnWithResidualConnectionTransferMitbihToPtbFrozen":\
+        CnnWithResidualConnectionTransferMitbihToPtbFrozen
 
 
 }
@@ -78,7 +81,8 @@ MODEL_NAME_TO_WEIGHTS_PATH = {
     "VanillaRNNPTB": "saved_models/2022-03-28_234942__exp_10_a_VanillaRNNPTB/best_model.ckpt",
     "VanillaCnnPTB": "saved_models/2022-03-29_014835__exp_0_b_VanillaCnnPTB/best_model.ckpt",
     "VanillaCnnMITBIH": "saved_models/2022-03-29_012323__exp_0_a_VanillaCnnMITBIH/best_model.ckpt",
-    "CnnWithResidualConnectionTransferMitbihToPtb": None
+    "CnnWithResidualConnectionTransferMitbihToPtb": None,
+    "CnnWithResidualConnectionTransferMitbihToPtbFrozen": None
 
 }
 class ModelFactory(object):

@@ -41,7 +41,7 @@ optimizer & cost_function iniatilazion _etc._ and provide and interface to
 run the training based on a single configuration file (refer below).
 
 ## Please note: the directory structure must be as follows:
-Make sure to put the datasets (as they are *not* added in the submission)
+**Make sure to put the datasets (as they are not added in the submission)**
 ```
 
 ├── input
@@ -147,6 +147,8 @@ _e.g._ : `2022-03-29_014835__exp_0_b_VanillaCnnPTB`
 |`experiment_1_a_cnn_with_residual_block.yaml`| CNN with residual blocks (for MITBIH dataset) |
 |`experiment_6_b_cnn2d_ptb.yaml`|2D-CNN model for PTBDB |
 |`experiment_6_a_cnn2d_mitbih.yaml`| 2D-CNN model for MITBIH |
+|`experiment_11_a_transfer_cnn_with_residual_block_mit_to_ptb.yaml`|Transfer Learning - without freezing weights |
+|`experiment_11_c_transfer_frozen_cnn_with_residual_block_mit_to_ptb.yaml`|Transfer Learning with frozen weights|
 
 - There are more in the `experiment_configs/archive` if you wish to explore those as well. But the
 above mentioned are the ones we included in our report.
@@ -209,6 +211,8 @@ The following is a list of Models you can try:
 |`CnnWithResidualConnection`|CNN with residual blocks (for MITBIH dataset) | `mitbih` |
 |`CnnModel2DPTB`|2D-CNN model for PTBDB | `ptbdb` |
 |`CnnModel2DMITBIH` |2D-CNN model for MITBIH | `mitbih` |
+|`CnnWithResidualConnectionTransferMitbihToPtb`|CNN with residual connection (to be used for transfer learning with unfrozen weights)| `ptbdb` |
+|`CnnWithResidualConnectionTransferMitbihToPtbFrozen`|CNN with residual connection (but freezes some weights) (It is to be used for transfer learning)| `ptbdb` |
 
 ## Testing NN ensemble:
 

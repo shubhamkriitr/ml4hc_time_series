@@ -22,6 +22,7 @@ In the command line, create a conda environment with name `ENVNAME` running:
 
 # Overview of Code Structure
 
+
 - The modules containing models are prefixed with `model_` except for 
 `model_factory.py`, which contains classes to resolve and load models by name.
 We experimented with different models and all of them can be found in these
@@ -55,5 +56,17 @@ apply to all such models
     ```
   - The `experiment_configs` folder contains many configs, that we have used
   for running our experiments. You can choose any of those or create your own
-```
-```
+
+The steps above will do the following:
+- It will start training 
+- create `runs` folder if not already present
+- create a timestamped folder with `tag` value provided in the config as suffix
+_e.g._ : `2022-03-29_014835__exp_0_b_VanillaCnnPTB`
+  - this folder will be used to output the best model 
+  - in this folder `logs` subfolder will be created in which tensorboard logs
+    and AUROC and AUPRC curves will be saved.
+- the best model will be saved  if the validation F1 has increased when
+  compared to the last best F1
+
+> Steps for evaluating saved model:
+

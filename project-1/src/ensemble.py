@@ -1,4 +1,4 @@
-from svm import load_params, dataloader_d, class_num
+from svm import load_params, dataloader_d, class_num, class_subsample, min_sample
 from argparse import ArgumentParser
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, f1_score
@@ -82,6 +82,9 @@ def train_sklearn_ensemble(dataset, method, n_estimators, max_samples, n_jobs, m
         ensemble = BaggingClassifier(base_estimator=model, n_estimators=n_estimators,
             max_samples=max_samples, n_jobs=n_jobs, verbose=2)
     elif method == "ada":
+        class_n = class_num[dataset]
+        subsample = class_subsample[dataset]
+        x_train, y_train = min_sample(x_train, y_train, class_n, subsample)
         ensemble = AdaBoostClassifier(base_estimator=model, n_estimators=n_estimators)
     scaler = StandardScaler().fit(x_train)
     x_train, x_test = scaler.transform(x_train), scaler.transform(x_test)
@@ -111,7 +114,7 @@ def test(dataset, models):
     from model_factory import ModelFactory
     import torch
     from sklearn.metrics import f1_score, accuracy_score
-    print('Testing', models)
+    print(80*'='+'\nTesting', models, '\n'+'='*80)
     # list of model loaders :
     # getting class from factory and creating an instance
     ensemble = ModelEnsembler(config={"lazy_loading": True})
@@ -148,7 +151,6 @@ def test(dataset, models):
         y_prob = torch.concat(probs)
     print(f"Acc: {accuracy_score(y_true, y_pred)}")
     print("F1: {}".format(f1_score(y_true, y_pred, average="macro")))
-    print(pd.DataFrame(y_true).value_counts())
     if dataset == PTBDB:
         false_pos , true_pos , _ = roc_curve (y_true, y_prob)
         auc_roc = auc(false_pos, true_pos)
@@ -158,16 +160,19 @@ def test(dataset, models):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument('dataset')
-    parser.add_argument('--svm', action='store_true')
-    parser.add_argument('-samples', type=int, default=None)
-    parser.add_argument('-models', type=int, default=2)
-    parser.add_argument('-jobs', type=int, default=1)
-    parser.add_argument('-method', choices=['bagging','ada'], default="bagging")
-    parser.add_argument('-modelpath', default=None)
+    subparsers = parser.add_subparsers(title='action', dest='action')
+    nn_parser = subparsers.add_parser('nn')
+    svm_parser = subparsers.add_parser('svm')
+    nn_parser.add_argument('dataset')
+    svm_parser.add_argument('dataset')
+    svm_parser.add_argument('-samples', type=int, default=None)
+    svm_parser.add_argument('-models', type=int, default=2)
+    svm_parser.add_argument('-jobs', type=int, default=1)
+    svm_parser.add_argument('-method', choices=['bagging','ada'], default="bagging")
+    svm_parser.add_argument('-modelpath', default=None)
     def_samples = {MITBIH: 40000, PTBDB: 11641}
     args = parser.parse_args()
-    if args.svm:
+    if args.action == 'svm':
         train_sklearn_ensemble(
             args.dataset, args.method,
             args.models,
@@ -175,12 +180,13 @@ if __name__ == "__main__":
             args.jobs, model_path=args.modelpath
         )
     else:
-        test(args.dataset, ["CnnWithResidualConnection"])
-        #test(args.dataset, ["CnnWithResidualConnection", "RnnModelMITBIH"])
-        #test(args.dataset, ["RnnModelMITBIH", "VanillaCnnMITBIH"])
-        #test(args.dataset, ["CnnWithResidualConnection", "VanillaCnnMITBIH"])
-        #test(args.dataset, ["CnnWithResidualConnection", "RnnModelMITBIH", "VanillaCnnMITBIH"])
-        #test(args.dataset, ["CnnWithResidualConnectionPTB", "RnnModelPTB"])
-        #test(args.dataset, ["RnnModelPTB", "VanillaCnnPTB"])
-        #test(args.dataset, ["CnnWithResidualConnectionPTB", "VanillaCnnPTB"])
-        #test(args.dataset, ["CnnWithResidualConnectionPTB", "RnnModelPTB", "VanillaCnnPTB"])
+        if args.dataset == MITBIH:
+            test(args.dataset, ["CnnWithResidualConnection", "RnnModelMITBIH"])
+            test(args.dataset, ["RnnModelMITBIH", "VanillaCnnMITBIH"])
+            test(args.dataset, ["CnnWithResidualConnection", "VanillaCnnMITBIH"])
+            test(args.dataset, ["CnnWithResidualConnection", "RnnModelMITBIH", "VanillaCnnMITBIH"])
+        if args.dataset == PTBDB:
+            test(args.dataset, ["CnnWithResidualConnectionPTB", "RnnModelPTB"])
+            test(args.dataset, ["RnnModelPTB", "VanillaCnnPTB"])
+            test(args.dataset, ["CnnWithResidualConnectionPTB", "VanillaCnnPTB"])
+            test(args.dataset, ["CnnWithResidualConnectionPTB", "RnnModelPTB", "VanillaCnnPTB"])

@@ -42,6 +42,22 @@ run the training based on a single configuration file (refer below).
 ---
 # How to run training?
 
+## For SVM models
+In order to train SVM models you can call:
+
+    python src/svm.py train [mitbih|ptbdb] [OPTIONS] 
+
+specifying the dataset over which to train the model.
+Running the script will train several SVMs with different hyperparameter selections, and
+output test metrics for the SVM that performed better in F1 score
+over cross validation. The script offers as options:
+- iter: indicates how many different randomly chosen hyperparameter configurations to train on (default 5)
+- jobs: number of threads to use for training SVM models in parallel (default 1)
+
+We provide the SVM models with best performance we found in files:
+- src/saved_models/svm_mitbih.pickle for MIBIH
+- src/saved_models/svm_ptbdb.pickle for PTBDB
+
 ## For PyTorch based Deep Learning Models:
 
 - N.B. Most of our models are implemented in PyTorch and the steps below
@@ -70,7 +86,6 @@ _e.g._ : `2022-03-29_014835__exp_0_b_VanillaCnnPTB`
     and AUROC and AUPRC curves will be saved.
 - the best model will be saved  if the validation F1 has increased when
   compared to the last best F1
-
 ### These are the training Config File used for different experiments (training)
 |**Config File**| **Experiment description**|
 |--------------------|---------------------|
@@ -87,6 +102,19 @@ _e.g._ : `2022-03-29_014835__exp_0_b_VanillaCnnPTB`
 
 - There are more in the `experiment_configs/archive` if you wish to explore those as well. But the
 above mentioned are the ones we included in our report.
+
+## For SVM ensembles
+
+In order to train the bagging SVM ensemble you can run:
+
+    python src/ensemble.py svm [OPTIONS] 
+
+where the following options are offered:
+- -samples: number of samples to be used to train each bagging classifier
+- -models: number of models to train in the ensemble
+- -jobs: number of threads to use for training models in parallel
+- -modelpath: path to a saved individual SVM model with the hyperparameters to be used. If not indicated, a default SVM configuration is used.
+
 ---
 ## How to run evaluation?
 
@@ -134,6 +162,26 @@ The following is a list of Models you can try:
 |`CnnModel2DPTB`|2D-CNN model for PTBDB | `ptbdb` |
 |`CnnModel2DMITBIH` |2D-CNN model for MITBIH | `mitbih` |
 
+## Testing NN ensemble:
+
+In order to test different combinations of NN ensembles using our trained models, you can run from the `src` directory:
+
+    python ensemble.py nn [mitbih|ptbdb]
+
+which will print the performance of several ensembles.
+
+## Generating plots for data subsample:
+
+In order to generate plots with the performance of an SVM model with respect to
+different downsampling rates over the training data, run:
+
+    python src/svm.py samples [mitbih|ptbdb] -model MODEL_PATH -iter N
+
+indicating the path of a saved SVM model from which to take the hyperparameters (or use a default SVM if not indicated), and the number `N`
+of equally spaced maximum number of samples per class to use from the
+training data.
+
+The plot will be generated in a .jpeg in the current directory (e.g. `sample_svm_2022-03-29_154116_.jpeg`) along with a csv file with the f1 score, accuracy, and training time for each number of samples used (e.g. `sample_svm_2022-03-29_154116__stats.csv`).
 
 # Appendix
 

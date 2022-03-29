@@ -3,7 +3,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.utils import resample
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.metrics import accuracy_score, f1_score, roc_curve, auc, precision_recall_curve
 from data_loader import MITBIH, MITBIHDataLoader, PTBDataLoader, DataLoaderUtil, MITBIH, PTBDB
 from util import get_timestamp_str
 import pickle
@@ -75,7 +75,10 @@ def run(dataset, iters, jobs):
     scaler.fit(x_sample)
     x_sample = scaler.transform(x_sample)
     x_test = scaler.transform(x_test)
-    model = SVC()
+    if dataset == MITBIH:
+        model = SVC()
+    else:
+        model = SVC(probability=True)
     param_grid = {
         "C": np.logspace(-3,1),
         "kernel": ['poly', 'rbf', 'sigmoid'],
@@ -87,12 +90,43 @@ def run(dataset, iters, jobs):
     out_path_stats = "svm_%s_stats.csv" % get_timestamp_str()
     out_path_model = "svm_%s_model.pickle" % get_timestamp_str()
     pd.DataFrame(search.cv_results_).to_csv(out_path_stats)
-    pickle.dump(trained_model, open(out_path_model, 'bw'))
+    pickle.dump(trained_model.best_estimator_, open(out_path_model, 'bw'))
     y_pred = trained_model.predict(x_test)
     f1 = f1_score(y_test, y_pred, average="macro")
     print("Test f1 score : %s "% f1)
     acc = accuracy_score(y_test, y_pred)
     print("Test accuracy score : %s "% acc)
+    if dataset == PTBDB:
+        y_prob = trained_model.predict_proba(x_test)[:,1]
+        false_pos , true_pos , _ = roc_curve (y_test, y_prob)
+        auc_roc = auc(false_pos, true_pos)
+        precision, recall, _ = precision_recall_curve(y_test, y_prob)
+        auc_prc =  auc(recall, precision)
+        print(f'AUCROC: {auc_roc}. AUCPRC: {auc_prc}')
+
+def evaluate_model(dataset, model_path):
+    dataloader = dataloader_d[dataset]()
+    x_train, _, x_test, y_test = dataloader.load_data()
+    x_train = x_train.squeeze()
+    x_test = x_test.squeeze()
+    scaler = StandardScaler()
+    scaler.fit(x_train)
+    x_train = scaler.transform(x_train)
+    x_test = scaler.transform(x_test)
+    params = load_model(model_path).get_params()
+    model = load_model(model_path)
+    y_pred = model.predict(x_test)
+    f1 = f1_score(y_test, y_pred, average="macro")
+    print("Test f1 score : %s "% f1)
+    acc = accuracy_score(y_test, y_pred)
+    print("Test accuracy score : %s "% acc)
+    if dataset == PTBDB and model.probability:
+        y_prob = model.predict_proba(x_test)[:,1]
+        false_pos , true_pos , _ = roc_curve (y_test, y_prob)
+        auc_roc = auc(false_pos, true_pos)
+        precision, recall, _ = precision_recall_curve(y_test, y_prob)
+        auc_prc =  auc(recall, precision)
+        print(f'AUCROC: {auc_roc}. AUCPRC: {auc_prc}')
 
 def plot_f1_acc_samples(n, f1, acc, out):
     fig, ax1 = plt.subplots()
@@ -106,14 +140,20 @@ def plot_f1_acc_samples(n, f1, acc, out):
     plt.tight_layout()
     plt.savefig(out)
 
+def load_model(model_path):
+    model = pickle.load(open(model_path, 'rb'))
+    if isinstance(model, SVC):
+        return model
+    else:
+        return model.best_estimator_
+
 def load_params(model_path):
     if model_path == None:
-        print('Training default SVC')
+        print('Using default SVC params')
         model_params = {}
     else:
-        print(f'Training with params from {model_path}')
-        model_example = pickle.load(open(model_path, 'rb'))
-        model_params = model_example.best_estimator_.get_params()
+        print(f'Using params from {model_path}')
+        model_params = load_model(model_path).get_params()
         print('Params', model_params)
     return model_params
 
@@ -169,7 +209,7 @@ if __name__ == "__main__":
     subparsers = parser.add_subparsers(title='action',dest='action')
     train_subp = subparsers.add_parser('train')
     train_subp.add_argument('dataset', choices=[MITBIH, PTBDB])
-    train_subp.add_argument('-iter', action='store', type=int, default=10)
+    train_subp.add_argument('-iter', action='store', type=int, default=5)
     train_subp.add_argument('-jobs', action='store', type=int, default=1)
     samples_subp = subparsers.add_parser('samples')
     samples_subp.add_argument('dataset', choices=[MITBIH, PTBDB])

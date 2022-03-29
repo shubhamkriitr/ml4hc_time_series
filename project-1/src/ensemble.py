@@ -4,8 +4,13 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, f1_score
 from data_loader import MITBIH, PTBDB, DataLoaderUtil
 from sklearn.svm import SVC
-from sklearn.ensemble import BaggingClassifier
+from sklearn.ensemble import BaggingClassifier, AdaBoostClassifier
 from model_factory import TrainedModelFactory, RnnModelMITBIH, CnnWithResidualConnection
+from util import get_timestamp_str
+from sklearn.metrics import roc_curve, auc
+from sklearn.metrics import precision_recall_curve
+import pickle
+import pandas as pd
 
 class BaseEnsembler:
     def __init__(self, *args, **kwargs) -> None:
@@ -64,7 +69,7 @@ class ModelEnsembler(BaseEnsembler):
         aggregate_prediction_prob = aggregate_prediction_prob/model_count
         return aggregate_prediction_prob
 
-def train_sklearn_ensemble(dataset, n_estimators, max_samples, n_jobs, model_path=None):
+def train_sklearn_ensemble(dataset, method, n_estimators, max_samples, n_jobs, model_path=None):
     x_train, y_train, x_test, y_test = dataloader_d[dataset]().load_data()
     x_train = x_train.squeeze()
     x_test = x_test.squeeze()
@@ -72,8 +77,12 @@ def train_sklearn_ensemble(dataset, n_estimators, max_samples, n_jobs, model_pat
     model_params["random_state"] = None
     model_params["probability"] = True
     model = SVC(**model_params)
-    ensemble = BaggingClassifier(base_estimator=model, n_estimators=n_estimators,
-        max_samples=max_samples, n_jobs=n_jobs, verbose=2)
+    ensemble = None
+    if method == "bagging":
+        ensemble = BaggingClassifier(base_estimator=model, n_estimators=n_estimators,
+            max_samples=max_samples, n_jobs=n_jobs, verbose=2)
+    elif method == "ada":
+        ensemble = AdaBoostClassifier(base_estimator=model, n_estimators=n_estimators)
     scaler = StandardScaler().fit(x_train)
     x_train, x_test = scaler.transform(x_train), scaler.transform(x_test)
     print('Training ensemble')
@@ -83,41 +92,69 @@ def train_sklearn_ensemble(dataset, n_estimators, max_samples, n_jobs, model_pat
     print("Test f1 score : %s "% f1)
     acc = accuracy_score(y_test, y_pred)
     print("Test accuracy score : %s "% acc)
+    if dataset == PTBDB:
+        prob = ensemble.predict_proba(x_test)
+        false_pos , true_pos , _ = roc_curve (y_test, prob)
+        auc_roc = auc(false_pos, true_pos)
+        precision, recall, _ = precision_recall_curve(y_test, prob)
+        auc_prc =  auc(recall, precision)
+        print(f'AUCROC: {auc_roc}. AUCPRC: {auc_prc}')
+    out_path_model = "ensemble_%s_model.pickle" % get_timestamp_str()
+    pickle.dump(ensemble, open(out_path_model, 'bw'))
 
-def test():
+def load_model(model_class):
+    lazy_model_loader = TrainedModelFactory().get_lazy_loader(model_class)
+    #model = lazy_model_loader()
+    return lazy_model_loader
+
+def test(dataset, models):
     from model_factory import ModelFactory
     import torch
     from sklearn.metrics import f1_score, accuracy_score
-
+    print('Testing', models)
     # list of model loaders :
     # getting class from factory and creating an instance
-    def load_model(model_class):
-        lazy_model_loader = TrainedModelFactory().get_lazy_loader(model_class)
-        #model = lazy_model_loader()
-        return lazy_model_loader
-
     ensemble = ModelEnsembler(config={"lazy_loading": True})
     #models = [load_model("RnnModelMITBIH")]
-    models = [load_model("CnnWithResidualConnection"), load_model("RnnModelMITBIH")]
-    ensemble.add_models(models)
-
+    ensemble.add_models([load_model(m) for m in models])
     from data_loader import DataLoaderUtil, DATA_MITBIH, DATA_PTBDB
+    if dataset == MITBIH:
+        loaderclass = DATA_MITBIH
+    elif dataset == PTBDB:
+        loaderclass = DATA_PTBDB
+
     _, _, test_loader = DataLoaderUtil().get_data_loaders(
-        dataset_name=DATA_MITBIH,
+        dataset_name=loaderclass,
         test_batch_size=100
     )
 
     g_truth = []
     preds = []
+    probs = []
     for idx, batch_data in enumerate(test_loader):
         x_true, y_true = batch_data
         y_pred_prob = ensemble.predict(x_true)
-        batch_pred = torch.argmax(y_pred_prob, dim=1)
-        g_truth.append(y_true)
-        preds.append(batch_pred)
+        if dataset == PTBDB:
+            batch_pred = y_pred_prob > 0.5
+            probs.append(y_pred_prob.detach())
+        else:
+            batch_pred = torch.argmax(y_pred_prob, dim=1)
+        
+        g_truth.append(y_true.detach())
+        preds.append(batch_pred.detach())
     y_pred = torch.concat(preds)
-    y_true = torch.concat(g_truth)
+    y_true = torch.concat(g_truth).detach()
+    if dataset == PTBDB:
+        y_prob = torch.concat(probs)
     print(f"Acc: {accuracy_score(y_true, y_pred)}")
+    print("F1: {}".format(f1_score(y_true, y_pred, average="macro")))
+    print(pd.DataFrame(y_true).value_counts())
+    if dataset == PTBDB:
+        false_pos , true_pos , _ = roc_curve (y_true, y_prob)
+        auc_roc = auc(false_pos, true_pos)
+        precision, recall, _ = precision_recall_curve(y_true, y_prob)
+        auc_prc =  auc(recall, precision)
+        print(f'AUCROC: {auc_roc}. AUCPRC: {auc_prc}')
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -126,15 +163,24 @@ if __name__ == "__main__":
     parser.add_argument('-samples', type=int, default=None)
     parser.add_argument('-models', type=int, default=2)
     parser.add_argument('-jobs', type=int, default=1)
+    parser.add_argument('-method', choices=['bagging','ada'], default="bagging")
     parser.add_argument('-modelpath', default=None)
     def_samples = {MITBIH: 40000, PTBDB: 11641}
     args = parser.parse_args()
     if args.svm:
         train_sklearn_ensemble(
-            args.dataset,
+            args.dataset, args.method,
             args.models,
             args.samples if args.samples is not None else def_samples[args.dataset],
             args.jobs, model_path=args.modelpath
         )
     else:
-        test()
+        test(args.dataset, ["CnnWithResidualConnection"])
+        #test(args.dataset, ["CnnWithResidualConnection", "RnnModelMITBIH"])
+        #test(args.dataset, ["RnnModelMITBIH", "VanillaCnnMITBIH"])
+        #test(args.dataset, ["CnnWithResidualConnection", "VanillaCnnMITBIH"])
+        #test(args.dataset, ["CnnWithResidualConnection", "RnnModelMITBIH", "VanillaCnnMITBIH"])
+        #test(args.dataset, ["CnnWithResidualConnectionPTB", "RnnModelPTB"])
+        #test(args.dataset, ["RnnModelPTB", "VanillaCnnPTB"])
+        #test(args.dataset, ["CnnWithResidualConnectionPTB", "VanillaCnnPTB"])
+        #test(args.dataset, ["CnnWithResidualConnectionPTB", "RnnModelPTB", "VanillaCnnPTB"])

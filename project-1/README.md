@@ -9,15 +9,17 @@ We have tested our code in an environment with the following specifications:
         - `x86_64 ` 
     - RAM: 16 GB
 - OS: `Ubuntu 20.04.4 LTS`
-- Python Version: `3.6.13`
-## Importing the conda environment
-
-In the command line, create a conda environment with name `ENVNAME` running:
-
-    conda env create -f environment.yml -n ENVNAME
-    conda activate ENVNAME
-
-[TODO:] - Just give the requirements
+- Python Version: `3.7.11`
+## Creating isolated execution environment
+- Go to the `src` directory
+- Execute the following in sequence (enter yes when prompted):
+```
+conda create -n ml4hc_ais python==3.7.11
+conda activate ml4hc_ais
+pip install -r requirements.txt
+```
+- Now the environment should be ready
+- Make sure to check that the environment is activated before running the code
 
 
 # Overview of Code Structure

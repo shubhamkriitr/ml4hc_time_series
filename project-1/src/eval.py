@@ -105,15 +105,23 @@ if __name__ == "__main__":
     parser.add_argument("--mode", nargs="+", type=str, required=False,
                          default=["test", "val"])
     parser.add_argument("--count-params", action="store_true", default=False)
+    parser.add_argument("--model-path", type=str, default="")
 
     args = parser.parse_args()
 
+    model = None
+    if args.model_path == "":
+        lazy_model_loader = TrainedModelFactory().get_lazy_loader(args.model)
+        model = lazy_model_loader()
+        # The above two lines are equivalent to
+        # model = TrainedModelFactory().get(args.model)
+        # but model is not actually loaded until lazy_model_loader is called
+    else:
+        print(f"Loading weights from: {args.model_path}")
+        model = TrainedModelFactory().load_from_location(
+                        model_name=args.model,
+                        model_weights_path=args.model_path)
     
-    lazy_model_loader = TrainedModelFactory().get_lazy_loader(args.model)
-    model = lazy_model_loader()
-    # The above two lines are equivalent to
-    # model = TrainedModelFactory().get(args.model)
-    # but model is not actually loaded until lazy_model_loader is called
 
     evaluator = ModelEvaluator()
 

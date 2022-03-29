@@ -107,6 +107,16 @@ class TrainedModelFactory(ModelFactory):
 
     def get_lazy_loader(self, model_name):
         return lambda : self.get(model_name)
+    
+    def load_from_location(self, model_name, model_weights_path):
+        model_class =  super().get(model_name)
+
+        model: torch.nn.Module = model_class() # Assumes model does not need init params
+
+        state_dict = torch.load(model_weights_path)
+        model.load_state_dict(state_dict=state_dict, strict=True)
+        # make sure to call model.eval() or model.train() based on the usage
+        return model
         
 
 if __name__ == "__main__":

@@ -1,7 +1,8 @@
 ## Acknowlegment
 We expect everything to work on an isolated python environment created 
 as per the instructions below, but in case you face any issues running
-the code please feel free to contact us by email or on MS-Teams ().
+the code please feel free to contact us by email or on MS-Teams 
+(irodrigu@student.ethz.ch, kumarsh@student.ethz.ch, neumannam@ethz.ch).
 
 We have tested our code in an environment with the following specifications:
 - Machine:
@@ -33,12 +34,12 @@ files (however we have mentioned only the relevant ones in the report.)
 - `data_loader.py` contains dataloaders for the two datasets and some extensions
 thereof, to provide support for loading , splitting and subsampling the data.
 
-- `trainingutil.py` : This contains the trainer (`#TODO`) classes to abstract
-training loop and experiment pipeline classes 
+- `trainingutil.py` : This contains the trainer (e.g. `BaseTrainer`, `CnnTrainer`) 
+classes to abstract training loop; and experiment pipeline classes 
 (_e.g._ `ExperimentPipelineForClassifier`) to abstract away logging, data loading,
 optimizer & cost_function iniatilazion _etc._ and provide and interface to 
 run the training based on a single configuration file (refer below).
-
+---
 # How to run training?
 
 ## For PyTorch based Deep Learning Models:
@@ -56,8 +57,8 @@ apply to all such models
     ```
     python trainingutil.py --config experiment_configs/experiment_0_a_vanilla_cnn_mitbih.yaml
     ```
-  - The `experiment_configs` folder contains many configs, that we have used
-  for running our experiments. You can choose any of those or create your own
+  - The **src/experiment_configs** directory contains many configs, that we have used
+  for running our experiments. You can choose any of those or create your own.
 
 The steps above will do the following:
 - It will start training 
@@ -70,16 +71,33 @@ _e.g._ : `2022-03-29_014835__exp_0_b_VanillaCnnPTB`
 - the best model will be saved  if the validation F1 has increased when
   compared to the last best F1
 
+### These are the training Config File used for different experiments (training)
+|**Config File**| **Experiment description**|
+|--------------------|---------------------|
+|`experiment_0_a_vanilla_cnn_mitbih.yaml` | Vanilla CNN Model on PTBDB Dataset (Binary classification)|
+|`experiment_0_b_vanilla_cnn_ptb.yaml`| Vanilla CNN model on MITBIH dataset (5 Class classification)|
+|`experiment_10_a_PTB_rnn_vanilla.yaml`| Vanilla RNN Model on PTBDB |
+|`experiment_10_b_MITBIH_rnn_vanilla.yaml`|Vanilla RNN Model on MITBIH |
+|`experiment_4_a_-PTB-_rnn.yaml`| Bidirectional RNN on PTBDB|
+|`experiment_5_a_MITBIH_rnn.yaml`| Bidirectional RNN on MITBIH|
+|`experiment_2_a_-PTB-_cnn_with_residual_block.yaml`|CNN with residual blocks (for PTBDB dataset) |
+|`experiment_1_a_cnn_with_residual_block.yaml`| CNN with residual blocks (for MITBIH dataset) |
+|`experiment_6_b_cnn2d_ptb.yaml`|2D-CNN model for PTBDB |
+|`experiment_6_a_cnn2d_mitbih.yaml`| 2D-CNN model for MITBIH |
 
-
+- There are more in the `experiment_configs/archive` if you wish to explore those as well. But the
+above mentioned are the ones we included in our report.
+---
 ## How to run evaluation?
 
 - `eval.py` is the script for running evaluations
+  - It prints out accuracy and F1 score for a given model on the given dataset
+  - It also shows PRC and ROC curves for binary classification task
 - We have kept the models we trained in the `src/saved_models/` directory
   - These models may be used for evaluation or you can give path to your own
   model
 
-The command to run is as follows:
+>The command to run is as follows:
 
 ```
 python eval.py --model <model_class_name> --data <dataset_name>
@@ -98,7 +116,7 @@ In case you wish to use the model trained by you. You may specify the model
 path using `--model-path` like in the example below
 
 - ```
-  python eval.py --model CnnModel2DPTB --data ptbdb --model-path "runs/2022-03-28_224128__CnnModel2DPTB/best_model.ckpt"
+  python eval.py --model CnnModel2DPTB --data ptbdb --model-path "saved_models/2022-03-28_224128__CnnModel2DPTB/best_model.ckpt"
   ```
 
 The following is a list of Models you can try:
@@ -115,4 +133,8 @@ The following is a list of Models you can try:
 |`CnnWithResidualConnection`|CNN with residual blocks (for MITBIH dataset) | `mitbih` |
 |`CnnModel2DPTB`|2D-CNN model for PTBDB | `ptbdb` |
 |`CnnModel2DMITBIH` |2D-CNN model for MITBIH | `mitbih` |
+
+
+# Appendix
+
 

@@ -23,8 +23,17 @@ pip install -r requirements.txt
 - Make sure to check that the environment is activated before running the code
 
 
+> **Please make the datasets available in the `input` folder (Also pelase check section: Overview of Code Structure)**
+```
+├── input
+│   ├── mitbih_test.csv
+│   ├── mitbih_train.csv
+│   ├── ptbdb_abnormal.csv
+│   └── ptbdb_normal.csv
+|
+└── src
+```
 # Overview of Code Structure
-
 
 - The modules containing models are prefixed with `model_` except for 
 `model_factory.py`, which contains classes to resolve and load models by name.
@@ -41,7 +50,7 @@ optimizer & cost_function iniatilazion _etc._ and provide and interface to
 run the training based on a single configuration file (refer below).
 
 ## Please note: the directory structure must be as follows:
-**Make sure to put the datasets (as they are not added in the submission)**
+**Please make sure to put the datasets (as they are not added in the submission)**
 ```
 
 ├── input

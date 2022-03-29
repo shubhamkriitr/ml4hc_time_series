@@ -39,6 +39,54 @@ classes to abstract training loop; and experiment pipeline classes
 (_e.g._ `ExperimentPipelineForClassifier`) to abstract away logging, data loading,
 optimizer & cost_function iniatilazion _etc._ and provide and interface to 
 run the training based on a single configuration file (refer below).
+
+## Please note: the directory structure must be as follows:
+Make sure to put the datasets (as they are *not* added in the submission)
+```
+
+├── input
+│   ├── mitbih_test.csv
+│   ├── mitbih_train.csv
+│   ├── ptbdb_abnormal.csv
+│   └── ptbdb_normal.csv
+├── README.md
+├── README.pdf
+├── resources
+│   ├── ...
+|
+└── src
+    ├── data_loader.py
+    ├── ensemble.py
+    ├── eval.py
+    ├── experiment_configs
+    │   ├── archive
+    │   │   ├── experiment_3_a_-PTB-_cnn_auto_encoder.yaml
+    │   │   ├── ....
+    |   |
+    │   ├── experiment_0_a_vanilla_cnn_mitbih.yaml
+    │   ├── .....
+    |
+    ├── main.py
+    ├── metric_auroc_auprc.py
+    ├── model_cnn_2d.py
+    ├── model_cnn_ae.py
+    ├── model_cnn.py
+    ├── model_cnn_res.py
+    ├── model_factory.py
+    ├── model_lstm.py
+    ├── model_rnn_b.py
+    ├── model_transformer.py
+    ├── requirements.txt
+    ├── saved_models
+    │   ├── 2022-03-28_000731__CnnWithResidualConnection
+    │   │   ├── best_model.ckpt
+    │   │   └── config.yaml
+    │   ├── ...
+    ├── svm.py
+    ├── trainingutil.py
+    └── util.py
+
+```
 ---
 # How to run training?
 

@@ -1,16 +1,4 @@
-## Acknowlegment
-We expect everything to work on an isolated python environment created 
-as per the instructions below, but in case you face any issues running
-the code please feel free to contact us by email or on MS-Teams 
-(irodrigu@student.ethz.ch, kumarsh@student.ethz.ch, neumannam@ethz.ch).
 
-We have tested our code in an environment with the following specifications:
-- Machine:
-    - CPU: `11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz`
-        - `x86_64 ` 
-    - RAM: 16 GB
-- OS: `Ubuntu 20.04.4 LTS`
-- Python Version: `3.7.11`
 ## Creating isolated execution environment
 - Go to the `src` directory
 - Execute the following in sequence (enter yes when prompted):
